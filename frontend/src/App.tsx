@@ -1,4 +1,5 @@
 import { FormEvent, useMemo, useState } from 'react';
+import NewProjectCard from './components/NewProjectCard';
 
 type Step = 'dashboard' | 'setup' | 'storyboard' | 'scenes' | 'shots' | 'export';
 type ShotStatus = 'todo' | 'done';
@@ -425,6 +426,8 @@ function Dashboard({
   onNew: () => void;
   onOpen: (projectId: number) => void;
 }) {
+  const [showCard, setShowCard] = useState(false);
+
   return (
     <div className="view">
       <header className="view-header">
@@ -432,42 +435,54 @@ function Dashboard({
           <p className="eyebrow">Dashboard</p>
           <h2>Projects</h2>
         </div>
-        <button className="primary-action" onClick={onNew} type="button" title="New Project">
+        <button className="primary-action" onClick={() => setShowCard(true)} type="button" title="New Project">
           + New Project
         </button>
       </header>
 
-      <div className="project-grid">
-        {projects.map((project) => {
-          const percent = progressPercent(project.shotsDone, project.shotsTotal);
-          return (
-            <article className="project-card" key={project.id}>
-              <div className="card-topline">
-                <span>{project.date}</span>
-                <span>{project.exported ? 'Exported' : 'Draft'}</span>
-              </div>
-              <h3>{project.name}</h3>
-              <p>{project.scriptTitle}</p>
-              <div className="platform-row">
-                {project.platforms.map((platform) => (
-                  <span key={platform}>{platform}</span>
-                ))}
-              </div>
-              <div className="timeline-strip" aria-label={`${percent}% complete`}>
-                {Array.from({ length: project.shotsTotal }).map((_, index) => (
-                  <span className={index < project.shotsDone ? 'complete' : ''} key={index} />
-                ))}
-              </div>
-              <div className="card-actions">
-                <span>{project.shotsDone} done</span>
-                <button onClick={() => onOpen(project.id)} type="button">
-                  Resume
-                </button>
-              </div>
-            </article>
-          );
-        })}
-      </div>
+      {showCard ? (
+        <div style={{ padding: 20 }}>
+          <NewProjectCard
+            onCancel={() => setShowCard(false)}
+            onStart={() => {
+              setShowCard(false);
+              onNew();
+            }}
+          />
+        </div>
+      ) : (
+        <div className="project-grid">
+          {projects.map((project) => {
+            const percent = progressPercent(project.shotsDone, project.shotsTotal);
+            return (
+              <article className="project-card" key={project.id}>
+                <div className="card-topline">
+                  <span>{project.date}</span>
+                  <span>{project.exported ? 'Exported' : 'Draft'}</span>
+                </div>
+                <h3>{project.name}</h3>
+                <p>{project.scriptTitle}</p>
+                <div className="platform-row">
+                  {project.platforms.map((platform) => (
+                    <span key={platform}>{platform}</span>
+                  ))}
+                </div>
+                <div className="timeline-strip" aria-label={`${percent}% complete`}>
+                  {Array.from({ length: project.shotsTotal }).map((_, index) => (
+                    <span className={index < project.shotsDone ? 'complete' : ''} key={index} />
+                  ))}
+                </div>
+                <div className="card-actions">
+                  <span>{project.shotsDone} done</span>
+                  <button onClick={() => onOpen(project.id)} type="button">
+                    Resume
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
