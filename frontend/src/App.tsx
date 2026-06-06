@@ -1417,12 +1417,14 @@ function ProjectCard({
       )}
       <div className="card-actions">
         <span>{isDraft ? 'Draft' : project.shotsDone === 0 ? 'Pending' : `${project.shotsDone} done`}</span>
-        <button className="danger-action" onClick={() => onDelete(project.id)} title="Delete project" type="button">
-          <Icon name="trash" />
-        </button>
-        <button onClick={() => onOpen(project.id)} type="button">
-          {isDraft ? 'Continue' : 'Open'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button className="danger-action" onClick={() => onDelete(project.id)} title="Delete project" type="button">
+            <Icon name="trash" />
+          </button>
+          <button className="primary-action" onClick={() => onOpen(project.id)} type="button">
+            {isDraft ? 'Continue' : 'Open'}
+          </button>
+        </div>
       </div>
     </article>
   );
@@ -1765,12 +1767,14 @@ function Scenes({
             <button className="secondary-action" onClick={onBack} type="button">
               Back
             </button>
-            <button className="danger-action" onClick={() => onSceneDelete(selectedScene.id)} title="Delete scene" type="button">
-              <Icon name="trash" />
-            </button>
-            <button className="primary-action" onClick={onConfirm} type="button">
-              Continue
-            </button>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button className="danger-action" onClick={() => onSceneDelete(selectedScene.id)} title="Delete scene" type="button">
+                <Icon name="trash" />
+              </button>
+              <button className="primary-action" onClick={onConfirm} type="button">
+                Continue
+              </button>
+            </div>
           </div>
         </header>
 
@@ -1877,14 +1881,18 @@ function Scenes({
               />
             </label>
             <div className="scene-meta">
-              <span>{scene.shots} shots</span>
-              <span>{scene.duration}</span>
-              <button className="danger-action" onClick={() => onSceneDelete(scene.id)} title="Delete scene" type="button">
-                <Icon name="trash" />
-              </button>
-              <button className="secondary-action" type="button">
-                Rewrite
-              </button>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <span>{scene.shots} shots</span>
+                <span>{scene.duration}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button className="danger-action" onClick={() => onSceneDelete(scene.id)} title="Delete scene" type="button">
+                  <Icon name="trash" />
+                </button>
+                <button className="secondary-action" type="button">
+                  Rewrite
+                </button>
+              </div>
             </div>
           </article>
         ))}
@@ -2319,7 +2327,7 @@ function Shots({
                 </label>
 
                  <div className="meta-actions-stack" style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <button className="meta-action-btn" type="button" title="Copy prompt" onClick={copyShotPrompt}>
+                  <button className="meta-action-btn primary" type="button" title="Copy prompt" onClick={copyShotPrompt}>
                     {copiedShotPrompt ? 'Copied ✓' : 'Copy Prompt'}
                   </button>
                   <button className="meta-action-btn" type="button" onClick={() => showShotPromptAction('regenerated')}>

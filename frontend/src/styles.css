@@ -853,39 +853,51 @@ button.is-complete:hover,
   transform: translateY(0) scale(0.98);
 }
 
-.secondary-action,
 .card-actions button {
   color: var(--text);
   border-color: var(--border-strong);
   background: var(--surface-strong);
 }
 
+.secondary-action {
+  color: var(--muted-strong);
+  border: 1px solid var(--border-strong);
+  background: transparent;
+}
+
 .danger-action {
-  min-width: 34px;
-  min-height: 34px;
+  min-width: 42px;
+  min-height: 42px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
-  padding: 0 10px;
+  padding: 0;
   color: var(--muted-strong);
   background: var(--surface-strong);
   font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .danger-action:hover {
-  border-color: #7f1d1d;
-  color: #fecaca;
-  background: rgba(127, 29, 29, 0.22);
+  border-color: #ef4444;
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.1);
 }
 
-.secondary-action:hover,
 .card-actions button:hover {
   background: var(--border-strong);
   border-color: var(--muted-strong);
   color: #ffffff;
+}
+
+.secondary-action:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  border-color: var(--muted-strong);
 }
 
 .secondary-action:active,
@@ -1774,7 +1786,7 @@ textarea:focus {
 
 .shot-title-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 18px;
 }
@@ -2079,3 +2091,16 @@ textarea:focus {
 .meta-action-btn:active {
   transform: scale(0.98);
 }
+
+.meta-action-btn.primary {
+  background: var(--accent);
+  color: #09090b;
+  border-color: var(--accent);
+}
+
+.meta-action-btn.primary:hover {
+  background: var(--accent-strong);
+  color: #09090b;
+  border-color: var(--accent-strong);
+}
+
