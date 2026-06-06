@@ -3,7 +3,7 @@ import { FormEvent, useState } from 'react';
 type NewProjectDraft = {
   projectName: string;
   script: string;
-  references: string;
+  timeLimit: string;
   notes: string;
 };
 
@@ -17,7 +17,7 @@ export default function NewProjectCard({
   const [draft, setDraft] = useState<NewProjectDraft>({
     projectName: '',
     script: '',
-    references: '',
+    timeLimit: '',
     notes: '',
   });
 
@@ -39,11 +39,11 @@ export default function NewProjectCard({
         </label>
 
         <label>
-          <span>Reference IDs</span>
+          <span>Time limit</span>
           <input
-            value={draft.references}
-            onChange={(event) => setDraft((current) => ({ ...current, references: event.target.value }))}
-            placeholder="@lead_ref_01, @room_ref_02"
+            value={draft.timeLimit}
+            onChange={(event) => setDraft((current) => ({ ...current, timeLimit: event.target.value }))}
+            placeholder="60s, 90s, 120s..."
           />
         </label>
 

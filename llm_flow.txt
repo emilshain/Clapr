@@ -15,7 +15,7 @@ Endpoint: POST /api/script/parse
 * Project Name: Optional user-provided title for the project.
 * Time Limit: Optional target video duration (e.g. "60s", "2m").
 * Preferred Platforms/Models: e.g. "Kling, Seedance, Van".
-* Reference Map: Reference tokens (e.g. "@lead_ref_01: Lead character description").
+* Reference Map: Reference tokens (e.g. "@lead_ref_01: Lead character description")(the names are suggested by llm only then reference id is to be made).
 * Director Notes: Extra notes for pacing, styles, and visuals.
 
 [PROCESSING ON SERVER]

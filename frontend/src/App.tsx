@@ -52,6 +52,7 @@ type Shot = {
   model: string;
   refs: string;
   firstFrame: string;
+  lastFrame: string;
   prompt: string;
   status: ShotStatus;
   note: string;
@@ -249,6 +250,7 @@ const defaultShots: Shot[] = [
     model: 'Kling',
     refs: '@lead_ref_01',
     firstFrame: 'Studio table with script pages, reference thumbnails, and a clean shot grid.',
+    lastFrame: 'Close up detail of the shot grid on the table.',
     prompt: 'Wide cinematic studio table, morning window light, script pages beside reference map, slow push in, tactile planning mood, realistic detail.',
     status: 'todo',
     note: '',
@@ -262,6 +264,7 @@ const defaultShots: Shot[] = [
     model: 'Seedance',
     refs: '@lead_ref_01',
     firstFrame: 'Creator hand circling the key line in a printed script.',
+    lastFrame: '',
     prompt: 'Medium close-up of creator marking a key script line, dolly in, soft paper texture, focused calm, natural color, no text overlays.',
     status: 'done',
     note: 'Clip link added in external tracker.',
@@ -275,6 +278,7 @@ const defaultShots: Shot[] = [
     model: 'Van',
     refs: '@lead_ref_01, @room_ref_02',
     firstFrame: 'Prompt card with model, duration, and reference ids arranged in a compact workspace.',
+    lastFrame: '',
     prompt: 'Clean interface insert, prompt card for a video model, visible reference tokens, compact professional workflow, crisp light, realistic UI surface.',
     status: 'todo',
     note: '',
@@ -288,6 +292,7 @@ const defaultShots: Shot[] = [
     model: 'Kling',
     refs: '@timeline_ref_01',
     firstFrame: 'Shot cards advancing from draft to done on a horizontal timeline.',
+    lastFrame: 'Timeline with all indicators showing green completed checkmarks.',
     prompt: 'Tracking move across shot cards, draft prompts becoming done clips, restrained product interface, sharp motion, editorial rhythm.',
     status: 'todo',
     note: '',
@@ -603,9 +608,9 @@ export default function App() {
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [activeProjectId, setActiveProjectId] = useState(1);
   const [form, setForm] = useState<SetupForm>(emptyForm);
-  const [beats, setBeats] = useState(defaultBeats);
-  const [scenes, setScenes] = useState(defaultScenes);
-  const [shots, setShots] = useState(defaultShots);
+  const [beats, setBeats] = useState<Beat[]>([]);
+  const [scenes, setScenes] = useState<Scene[]>([]);
+  const [shots, setShots] = useState<Shot[]>([]);
   const [selectedShotId, setSelectedShotId] = useState(1);
   const [exportFormat, setExportFormat] = useState('JSON');
   const [exportFilter, setExportFilter] = useState('All shots');
@@ -617,6 +622,7 @@ export default function App() {
   const [favoriteProjectIds, setFavoriteProjectIds] = useState<number[]>([1]);
   const [sidebarNotice, setSidebarNotice] = useState('');
   const [isParsingScript, setIsParsingScript] = useState(false);
+  const [parseError, setParseError] = useState('');
 
   const activeProject = projects.find((project) => project.id === activeProjectId) ?? projects[0];
   const favoriteProjects = projects.filter((project) => favoriteProjectIds.includes(project.id));
@@ -750,6 +756,7 @@ export default function App() {
     let projectBeats = beats;
     let projectScenes = scenes;
     let projectShots = shots;
+    let generatedRefMap = form.referenceMap;
 
     if (form.script.trim()) {
       setIsParsingScript(true);
@@ -764,15 +771,33 @@ export default function App() {
         });
         projectBeats = result.beats as typeof beats;
         projectScenes = result.scenes as typeof scenes;
-        projectShots = result.shots as typeof shots;
+        projectShots = result.shots.map((s) => ({
+          ...s,
+          lastFrame: s.lastFrame || '',
+          status: s.status as ShotStatus,
+        })) as typeof shots;
+        if (result.reference_map) {
+          generatedRefMap = {
+            people: result.reference_map.people || '',
+            props: result.reference_map.props || '',
+            locations: result.reference_map.locations || '',
+            soulIds: result.reference_map.soulIds || '',
+          };
+          setForm((current) => ({
+            ...current,
+            referenceMap: generatedRefMap,
+          }));
+        }
         setBeats(projectBeats);
         setScenes(projectScenes);
         setShots(projectShots);
       } catch (err) {
-        console.error('Script parsing failed, using defaults:', err);
-      } finally {
+        const msg = err instanceof Error ? err.message : String(err);
+        setParseError(`Script analysis failed: ${msg}. Check that the backend is running on port 8000.`);
         setIsParsingScript(false);
+        return;
       }
+      setIsParsingScript(false);
     }
 
     const nextStep = form.skipStoryboard ? (form.skipScenes ? 'references' : 'scenes') : 'storyboard';
@@ -782,8 +807,8 @@ export default function App() {
       scriptTitle: form.script.trim().split('\n')[0] || 'Pasted script',
       date: 'Jun 6, 2026',
       platforms: form.platforms,
-      references: collectReferenceIds(form.referenceMap),
-      referenceMap: form.referenceMap,
+      references: collectReferenceIds(generatedRefMap),
+      referenceMap: generatedRefMap,
       shotsDone: 0,
       shotsTotal: projectShots.length,
       stage: nextStep,
@@ -1196,25 +1221,9 @@ export default function App() {
               setBeats([]);
               setScenes([]);
               setShots([]);
-              navigateTo('create');
-            }}
-            onOpen={openProject}
-          />
-        ) : null}
-
-        {step === 'create' ? (
-          <CreateProjectPage
-            onCancel={goBack}
-            onCreate={(draft) => {
-              setForm((current) => ({
-                ...current,
-                projectName: draft.projectName,
-                script: draft.script,
-                referenceMap: createReferenceMapFromText(draft.references),
-                notes: draft.notes,
-              }));
               navigateTo('setup');
             }}
+            onOpen={openProject}
           />
         ) : null}
 
@@ -1234,7 +1243,9 @@ export default function App() {
             onChange={setForm}
             onSubmit={handleCreateProject}
             onTogglePlatform={togglePlatform}
+            onCancel={() => { setParseError(''); navigateTo('dashboard'); }}
             isSubmitting={isParsingScript}
+            errorMessage={parseError}
           />
         ) : null}
 
@@ -1280,16 +1291,36 @@ export default function App() {
         ) : null}
 
         {step === 'shots' ? (
-          <Shots
-            shots={orderedShots}
-            multiShotSuggestions={multiShotSuggestions}
-            selectedShot={selectedShot}
-            onSelect={openShot}
-            onDelete={deleteShot}
-            onStatus={toggleShotStatus}
-            onUpdate={updateShot}
-            onExport={() => goToStep('export')}
-          />
+          selectedShot ? (
+            <Shots
+              shots={orderedShots}
+              multiShotSuggestions={multiShotSuggestions}
+              selectedShot={selectedShot}
+              onSelect={openShot}
+              onDelete={deleteShot}
+              onStatus={toggleShotStatus}
+              onUpdate={updateShot}
+              onExport={() => goToStep('export')}
+            />
+          ) : (
+            <div className="view">
+              <header className="view-header">
+                <div>
+                  <p className="eyebrow">Shots</p>
+                  <h2>No shots yet</h2>
+                </div>
+                <button className="primary-action" onClick={() => goToStep('export')} type="button">
+                  Export
+                </button>
+              </header>
+              <div className="empty-state">
+                <p>No shots were generated. Go back to setup and paste a script to auto-generate shots.</p>
+                <button className="secondary-action" onClick={() => navigateTo('setup')} type="button">
+                  Back to setup
+                </button>
+              </div>
+            </div>
+          )
         ) : null}
 
         {step === 'export' ? (
@@ -1378,28 +1409,7 @@ function Dashboard({
   );
 }
 
-function CreateProjectPage({
-  onCancel,
-  onCreate,
-}: {
-  onCancel: () => void;
-  onCreate: (draft: { projectName: string; script: string; references: string; notes: string }) => void;
-}) {
-  return (
-    <div className="view new-project-page">
-      <header className="view-header">
-        <div>
-          <p className="eyebrow">New project</p>
-          <h2>Create a project</h2>
-        </div>
-      </header>
 
-      <section className="new-project-page-body">
-        <NewProjectCard onCancel={onCancel} onCreate={onCreate} />
-      </section>
-    </div>
-  );
-}
 
 function ProjectCard({
   project,
@@ -1553,13 +1563,17 @@ function Setup({
   onChange,
   onSubmit,
   onTogglePlatform,
+  onCancel,
   isSubmitting,
+  errorMessage,
 }: {
   form: SetupForm;
   onChange: (form: SetupForm) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onTogglePlatform: (platform: string) => void;
+  onCancel: () => void;
   isSubmitting?: boolean;
+  errorMessage?: string;
 }) {
   return (
     <form className="view form-view" onSubmit={onSubmit}>
@@ -1568,9 +1582,14 @@ function Setup({
           <p className="eyebrow">New project setup</p>
           <h2>Script to shot plan</h2>
         </div>
-        <button className="primary-action" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Analyzing script…' : 'Continue'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button className="secondary-action" type="button" onClick={onCancel} disabled={isSubmitting}>
+            Cancel
+          </button>
+          <button className="primary-action" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Analyzing script…' : 'Continue'}
+          </button>
+        </div>
       </header>
 
       <div className="form-grid">
@@ -1591,6 +1610,12 @@ function Setup({
             placeholder="Optional, e.g. 60 seconds"
           />
         </label>
+
+        {errorMessage && (
+          <div className="parse-error span-two" role="alert">
+            {errorMessage}
+          </div>
+        )}
 
         <label className="span-two">
           <span>Script</span>
@@ -1681,51 +1706,68 @@ function Storyboard({
       </header>
 
       <div className="beat-list">
-        {beats.map((beat, index) => (
-          <article className="editor-row" key={beat.id}>
-            <span className="index-pill">Beat {index + 1}</span>
-            <label>
-              <span>Title</span>
-              <input
-                value={beat.title}
-                onChange={(event) =>
-                  onBeatChange(beats.map((item) => (item.id === beat.id ? { ...item, title: event.target.value } : item)))
-                }
-              />
-            </label>
-            <label className="wide-field">
-              <span>Frame description</span>
-              <textarea
-                value={beat.frame}
-                onChange={(event) =>
-                  onBeatChange(beats.map((item) => (item.id === beat.id ? { ...item, frame: event.target.value } : item)))
-                }
-                rows={3}
-              />
-            </label>
-            <label>
-              <span>Mood</span>
-              <input
-                value={beat.mood}
-                onChange={(event) =>
-                  onBeatChange(beats.map((item) => (item.id === beat.id ? { ...item, mood: event.target.value } : item)))
-                }
-              />
-            </label>
-            <label>
-              <span>Duration</span>
-              <input
-                value={beat.duration}
-                onChange={(event) =>
-                  onBeatChange(beats.map((item) => (item.id === beat.id ? { ...item, duration: event.target.value } : item)))
-                }
-              />
-            </label>
-            <button className="secondary-action" type="button">
-              Refine
+        {beats.length === 0 ? (
+          <div className="empty-state">
+            <p>No beats yet. Paste a script in setup to auto-generate, or add one manually.</p>
+            <button
+              className="secondary-action"
+              type="button"
+              onClick={() => onBeatChange([{ id: 1, title: '', frame: '', mood: '', duration: '8s' }])}
+            >
+              + Add Beat
             </button>
-          </article>
-        ))}
+          </div>
+        ) : (
+          beats.map((beat, index) => (
+            <article className="editor-row" key={beat.id}>
+              <span className="index-pill">Beat {index + 1}</span>
+              <label>
+                <span>Title</span>
+                <input
+                  value={beat.title}
+                  onChange={(event) =>
+                    onBeatChange(beats.map((item) => (item.id === beat.id ? { ...item, title: event.target.value } : item)))
+                  }
+                />
+              </label>
+              <label className="wide-field">
+                <span>Frame description</span>
+                <textarea
+                  value={beat.frame}
+                  onChange={(event) =>
+                    onBeatChange(beats.map((item) => (item.id === beat.id ? { ...item, frame: event.target.value } : item)))
+                  }
+                  rows={3}
+                />
+              </label>
+              <label>
+                <span>Mood</span>
+                <input
+                  value={beat.mood}
+                  onChange={(event) =>
+                    onBeatChange(beats.map((item) => (item.id === beat.id ? { ...item, mood: event.target.value } : item)))
+                  }
+                />
+              </label>
+              <label>
+                <span>Duration</span>
+                <input
+                  value={beat.duration}
+                  onChange={(event) =>
+                    onBeatChange(beats.map((item) => (item.id === beat.id ? { ...item, duration: event.target.value } : item)))
+                  }
+                />
+              </label>
+              <button
+                className="secondary-action"
+                type="button"
+                onClick={() => onBeatChange([...beats, { id: Math.max(...beats.map((b) => b.id)) + 1, title: '', frame: '', mood: '', duration: '8s' }])}
+              >
+                + Add Beat
+              </button>
+            </article>
+          ))
+        )}
       </div>
     </div>
   );
@@ -1840,6 +1882,18 @@ function Scenes({
       </header>
 
       <div className="scene-grid">
+        {scenes.length === 0 && (
+          <div className="empty-state">
+            <p>No scenes yet. Paste a script in setup to auto-generate, or add one manually.</p>
+            <button
+              className="secondary-action"
+              type="button"
+              onClick={() => onSceneChange([{ id: 1, title: '', location: '', time: 'Day', description: '', shots: 0, duration: '0s' }])}
+            >
+              + Add Scene
+            </button>
+          </div>
+        )}
         {scenes.map((scene, sceneIndex) => (
           <article className="scene-card" key={scene.id}>
             <span className="index-pill">{sceneNumber(sceneIndex)}</span>
@@ -2252,6 +2306,10 @@ function Shots({
   const [refineText, setRefineText] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
+  const isCling = selectedShot.model === 'Kling';
+  const isMultishot = multiShotSuggestions.some((s) => s.shotIds.includes(selectedShot.id));
+  const isLastFrameEssential = isCling && isMultishot;
+
   function copyShotPrompt() {
     navigator.clipboard.writeText(selectedShot.prompt);
     setCopiedShotPrompt(true);
@@ -2415,10 +2473,37 @@ Return a JSON object in this exact format:
             <div className="shot-detail-grid">
               <div className="shot-detail-main">
                 <label>
-                  <span>First frame prompt</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    First frame prompt
+                    {isCling && (
+                      <span className="activity-model-badge" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                        Mandatory for Kling
+                      </span>
+                    )}
+                  </span>
                   <textarea
                     value={selectedShot.firstFrame}
                     onChange={(event) => onUpdate(selectedShot.id, 'firstFrame', event.target.value)}
+                    rows={3}
+                  />
+                </label>
+                <label>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    Last frame prompt
+                    {isLastFrameEssential ? (
+                      <span className="activity-model-badge" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                        Mandatory for Kling Multishot
+                      </span>
+                    ) : isMultishot ? (
+                      <span className="activity-model-badge" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                        Suggested for Multishot
+                      </span>
+                    ) : null}
+                  </span>
+                  <textarea
+                    value={selectedShot.lastFrame || ''}
+                    onChange={(event) => onUpdate(selectedShot.id, 'lastFrame', event.target.value)}
+                    placeholder="Describe the ending frame for continuity or transition..."
                     rows={3}
                   />
                 </label>

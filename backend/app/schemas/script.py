@@ -30,6 +30,7 @@ class Shot(BaseModel):
     model: Literal["Kling", "Seedance", "Van"]
     refs: str
     firstFrame: str
+    lastFrame: str = ""
     prompt: str
     status: str = "todo"
     note: str = ""
@@ -48,3 +49,5 @@ class ScriptParseResponse(BaseModel):
     beats: list[Beat]
     scenes: list[Scene]
     shots: list[Shot]
+    reference_map: dict[str, str] = {}
+

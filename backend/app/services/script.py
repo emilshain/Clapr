@@ -58,13 +58,19 @@ OUTPUT SCHEMA:
       "motion": "<Static | Slow push in | Dolly in | Dolly out | Tracking left to right | Pan | Tilt | Handheld | Crane up | Rack focus>",
       "duration": "<Xs — see duration rules below>",
       "model": "<Kling | Seedance | Van>",
-      "refs": "<@ref tokens from reference map, comma-separated, or empty string>",
+      "refs": "<@ref tokens from reference_map, comma-separated, or empty string>",
       "firstFrame": "<brief first-frame visual description>",
       "prompt": "<full production-ready generation prompt for the chosen model>",
       "status": "todo",
       "note": ""
     }
-  ]
+  ],
+  "reference_map": {
+    "people": "<Identify recurring characters and define ref IDs, e.g. John: @john_ref_01\\nSarah: @sarah_ref_02>",
+    "props": "<Identify recurring key objects/props, e.g. Car: @car_ref_01>",
+    "locations": "<Identify recurring settings/locations, e.g. Forest: @forest_ref_01>",
+    "soulIds": "<Optionally suggest style/actor IDs, or leave blank>"
+  }
 }
 
 DURATION RULES:
@@ -80,7 +86,8 @@ SCENES: Group shots by location/setup. Each scene = one physical location or set
 SHOTS: All shots needed to tell the story. Typical productions have 8–20 shots.
   - Follow the model decision tree from the guidelines below.
   - Write prompts in the style described for each model.
-  - Use @ref tokens from the reference map for people/props/locations when relevant.
+  - Suggest reference IDs and define them in the "reference_map" field.
+  - Use those suggested @ref tokens in the shots' "refs" and "prompt" fields (e.g. "@lead_ref_01").
 
 {guidelines_block}
 
@@ -129,8 +136,10 @@ def parse_script(request: ScriptParseRequest) -> ScriptParseResponse:
         f"[PROMPT EXAMPLES & BEST PRACTICES]\n{examples}" if examples else ""
     )
 
-    system_prompt = _SYSTEM_PROMPT.format(
-        guidelines_block=guidelines_block, examples_block=examples_block
+    system_prompt = (
+        _SYSTEM_PROMPT
+        .replace("{guidelines_block}", guidelines_block)
+        .replace("{examples_block}", examples_block)
     )
 
     ref_summary = "\n".join(
@@ -158,6 +167,7 @@ def parse_script(request: ScriptParseRequest) -> ScriptParseResponse:
             {"role": "user", "content": user_content},
         ],
         response_format={"type": "json_object"},
+        max_tokens=4096,
     )
 
     raw = response.choices[0].message.content or ""
@@ -167,4 +177,12 @@ def parse_script(request: ScriptParseRequest) -> ScriptParseResponse:
     scenes = [Scene(**s) for s in data.get("scenes", [])]
     shots = _fix_shot_durations([Shot(**s) for s in data.get("shots", [])])
 
-    return ScriptParseResponse(beats=beats, scenes=scenes, shots=shots)
+    reference_map = data.get("reference_map", {})
+    clean_ref_map = {
+        "people": reference_map.get("people", ""),
+        "props": reference_map.get("props", ""),
+        "locations": reference_map.get("locations", ""),
+        "soulIds": reference_map.get("soulIds", ""),
+    }
+
+    return ScriptParseResponse(beats=beats, scenes=scenes, shots=shots, reference_map=clean_ref_map)

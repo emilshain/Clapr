@@ -43,6 +43,7 @@ export type ParsedShot = {
   model: string;
   refs: string;
   firstFrame: string;
+  lastFrame?: string;
   prompt: string;
   status: string;
   note: string;
@@ -52,6 +53,7 @@ export type ScriptParseResponse = {
   beats: ParsedBeat[];
   scenes: ParsedScene[];
   shots: ParsedShot[];
+  reference_map?: Record<string, string>;
 };
 
 const baseUrl = (import.meta.env.VITE_BACKEND_URL as string | undefined) ?? 'http://localhost:8000';
