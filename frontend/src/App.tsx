@@ -1,7 +1,7 @@
 import { FormEvent, useMemo, useState } from 'react';
 import NewProjectCard from './components/NewProjectCard';
 
-type Step = 'dashboard' | 'setup' | 'storyboard' | 'scenes' | 'shots' | 'export';
+type Step = 'dashboard' | 'setup' | 'storyboard' | 'scenes' | 'references' | 'shots' | 'export';
 type ShotStatus = 'todo' | 'done';
 
 type Project = {
@@ -10,10 +10,16 @@ type Project = {
   scriptTitle: string;
   date: string;
   platforms: string[];
+  references: string[];
+  referenceMap: ProjectReferenceMap;
   shotsDone: number;
   shotsTotal: number;
   exported: boolean;
 };
+
+type ReferenceCategory = 'people' | 'props' | 'locations';
+
+type ProjectReferenceMap = Record<ReferenceCategory, string>;
 
 type Beat = {
   id: number;
@@ -47,6 +53,17 @@ type Shot = {
   note: string;
 };
 
+type MultiShotSuggestion = {
+  id: string;
+  title: string;
+  shotIds: number[];
+  model: string;
+  duration: string;
+  refs: string;
+  generationMode: 'single prompt' | 'continuous prompts';
+  prompt: string;
+};
+
 type SetupForm = {
   projectName: string;
   script: string;
@@ -58,8 +75,17 @@ type SetupForm = {
   skipScenes: boolean;
 };
 
+
+
 const platformOptions = ['Kling', 'Veo', 'Higgsfield', 'Runway'];
 const modelOptions = ['Kling 3.0', 'Veo 3', 'Higgsfield Soul', 'Runway Gen-4'];
+const referenceCategories: { id: ReferenceCategory; label: string; placeholder: string }[] = [
+  { id: 'people', label: 'People', placeholder: 'Lead actor -> @lead_ref_01' },
+  { id: 'props', label: 'Props', placeholder: 'Hero phone -> @phone_ref_01' },
+  { id: 'locations', label: 'Locations', placeholder: 'Studio table -> @studio_ref_01' },
+];
+
+
 
 const initialProjects: Project[] = [
   {
@@ -68,6 +94,12 @@ const initialProjects: Project[] = [
     scriptTitle: 'The first rain',
     date: 'Jun 6, 2026',
     platforms: ['Kling', 'Veo'],
+    references: ['@lead_ref_01', '@rain_ref_02'],
+    referenceMap: {
+      people: 'Lead -> @lead_ref_01',
+      props: 'Rain glass texture -> @rain_ref_02',
+      locations: 'Studio table -> @room_ref_02',
+    },
     shotsDone: 7,
     shotsTotal: 12,
     exported: true,
@@ -78,6 +110,12 @@ const initialProjects: Project[] = [
     scriptTitle: 'Three promises',
     date: 'Jun 5, 2026',
     platforms: ['Higgsfield'],
+    references: ['@founder_ref_01'],
+    referenceMap: {
+      people: 'Founder -> @founder_ref_01',
+      props: '',
+      locations: 'Office corner -> @office_ref_01',
+    },
     shotsDone: 2,
     shotsTotal: 9,
     exported: false,
@@ -208,6 +246,102 @@ function progressPercent(done: number, total: number) {
   return total === 0 ? 0 : Math.round((done / total) * 100);
 }
 
+function parseReferenceIds(input: string) {
+  return Array.from(new Set(input.match(/@[A-Za-z0-9_-]+/g) ?? []));
+}
+
+function collectReferenceIds(referenceMap: ProjectReferenceMap) {
+  return parseReferenceIds(Object.values(referenceMap).join('\n'));
+}
+
+function createReferenceMapFromText(input: string): ProjectReferenceMap {
+  return {
+    people: input,
+    props: '',
+    locations: '',
+  };
+}
+
+function countReferenceLines(input: string) {
+  return input
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean).length;
+}
+
+function buildReferencePrompt(category: ReferenceCategory, project: Project) {
+  const base = `Create a clean reference image sheet for every ${category} that appears across all scenes in ${project.name}.`;
+
+  if (category === 'people') {
+    return `${base} Keep the same face, wardrobe, and lighting continuity for each person so the generated reference IDs can be reused in later shots.`;
+  }
+
+  if (category === 'props') {
+    return `${base} Show each prop in a neutral studio composition with readable shape, scale, and material detail. If your generator requires a Soul ID or model-specific asset ID, capture it from the generated image output before moving on.`;
+  }
+
+  return `${base} Keep the background simple and consistent, with enough visual separation that the resulting reference IDs can be reused in every scene.`;
+}
+
+function sortShotsByStatus(shots: Shot[]) {
+  return [...shots].sort((left, right) => {
+    const leftRank = left.status === 'todo' ? 0 : 1;
+    const rightRank = right.status === 'todo' ? 0 : 1;
+
+    if (leftRank !== rightRank) {
+      return leftRank - rightRank;
+    }
+
+    return left.id - right.id;
+  });
+}
+
+function suggestMultiShots(shots: Shot[]) {
+  const byScene = shots.reduce<Record<string, Shot[]>>((groups, shot) => {
+    groups[shot.scene] = [...(groups[shot.scene] ?? []), shot];
+    return groups;
+  }, {});
+
+  return Object.entries(byScene).flatMap(([scene, sceneShots]) => {
+    const orderedSceneShots = [...sceneShots].sort((left, right) => left.id - right.id);
+    const modelGroups = orderedSceneShots.reduce<Shot[][]>((groups, shot) => {
+      const lastGroup = groups[groups.length - 1];
+
+      if (lastGroup && lastGroup[0].model === shot.model) {
+        lastGroup.push(shot);
+        return groups;
+      }
+
+      groups.push([shot]);
+      return groups;
+    }, []);
+
+    return modelGroups
+      .filter((group) => group.length > 1)
+      .map((group) => {
+        const shotIds = group.map((shot) => shot.id);
+        const refs = Array.from(new Set(parseReferenceIds(group.map((shot) => shot.refs).join(', ')))).join(', ');
+        const durations = group.map((shot) => shot.duration).join(' + ');
+        const generationMode: 'single prompt' | 'continuous prompts' = group.length === 2 ? 'single prompt' : 'continuous prompts';
+        const model = group[0].model;
+
+        return {
+          id: `${scene}-${model}-${shotIds.join('-')}`,
+          title: `${scene}: ${model} multishot`,
+          shotIds,
+          model,
+          duration: durations,
+          refs: refs || 'No refs assigned',
+          generationMode,
+          prompt:
+            generationMode === 'single prompt'
+              ? `Generate shots ${shotIds.map((id) => String(id).padStart(2, '0')).join(' + ')} in one prompt, keeping the same model, lighting, camera grammar, and reference IDs consistent across both shots.`
+              : `Generate shots ${shotIds.map((id) => String(id).padStart(2, '0')).join(' → ')} as continuous prompts with the same model, preserving continuity from one shot to the next across framing, timing, action, and reference IDs.`,
+        };
+      });
+  });
+}
+
 export default function App() {
   const [step, setStep] = useState<Step>('dashboard');
   const [projects, setProjects] = useState<Project[]>(initialProjects);
@@ -219,11 +353,20 @@ export default function App() {
   const [selectedShotId, setSelectedShotId] = useState(1);
   const [exportFormat, setExportFormat] = useState('JSON');
   const [exportFilter, setExportFilter] = useState('All shots');
+  const [recentScene, setRecentScene] = useState('');
+  const [selectedProject, setSelectedProject] = useState<number | null>(null);
 
   const activeProject = projects.find((project) => project.id === activeProjectId) ?? projects[0];
+  const orderedShots = useMemo(() => sortShotsByStatus(shots), [shots]);
+  const multiShotSuggestions = useMemo(() => suggestMultiShots(shots), [shots]);
   const doneCount = shots.filter((shot) => shot.status === 'done').length;
   const completion = progressPercent(doneCount, shots.length);
-  const selectedShot = shots.find((shot) => shot.id === selectedShotId) ?? shots[0];
+  const selectedShot = orderedShots.find((shot) => shot.id === selectedShotId) ?? orderedShots[0];
+  const sceneOptions = useMemo(() => scenes.map((scene) => scene.title), [scenes]);
+  const shotsForRecentScene = useMemo(() => {
+    const filtered = orderedShots.filter((shot) => shot.scene === recentScene);
+    return filtered.length ? filtered : orderedShots;
+  }, [orderedShots, recentScene]);
 
   const exportPreview = useMemo(() => {
     const filtered = shots.filter((shot) => {
@@ -269,6 +412,8 @@ export default function App() {
       scriptTitle: form.script.trim().split('\n')[0] || 'Pasted script',
       date: 'Jun 6, 2026',
       platforms: form.platforms,
+      references: parseReferenceIds(form.references),
+      referenceMap: createReferenceMapFromText(form.references),
       shotsDone: form.skipStoryboard && form.skipScenes ? 0 : doneCount,
       shotsTotal: shots.length,
       exported: false,
@@ -276,7 +421,9 @@ export default function App() {
 
     setProjects((current) => [newProject, ...current]);
     setActiveProjectId(newProject.id);
-    setStep(form.skipStoryboard ? (form.skipScenes ? 'shots' : 'scenes') : 'storyboard');
+    setSelectedProject(newProject.id);
+    setRecentScene(scenes[0]?.title ?? '');
+    setStep(form.skipStoryboard ? (form.skipScenes ? 'references' : 'scenes') : 'storyboard');
   }
 
   function togglePlatform(platform: string) {
@@ -306,6 +453,19 @@ export default function App() {
     updateProjectProgress(nextShots);
   }
 
+  function updateProjectReferenceMap(category: ReferenceCategory, value: string) {
+    setProjects((current) =>
+      current.map((project) => {
+        if (project.id !== activeProjectId) {
+          return project;
+        }
+
+        const referenceMap = { ...project.referenceMap, [category]: value };
+        return { ...project, referenceMap, references: collectReferenceIds(referenceMap) };
+      }),
+    );
+  }
+
   function saveExport() {
     setProjects((current) =>
       current.map((project) =>
@@ -318,30 +478,10 @@ export default function App() {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <div className="brand-block">
+        <button className="brand-block" onClick={() => setStep('dashboard')} type="button">
           <p className="eyebrow">Clapr</p>
           <h1>Prompt studio</h1>
-        </div>
-
-        <nav className="workflow-tabs" aria-label="Workflow">
-          {[
-            ['dashboard', 'Dashboard'],
-            ['setup', 'Setup'],
-            ['storyboard', 'Storyboard'],
-            ['scenes', 'Scenes'],
-            ['shots', `Shots ${doneCount}/${shots.length}`],
-            ['export', 'Export'],
-          ].map(([id, label]) => (
-            <button
-              className={step === id ? 'workflow-tab active' : 'workflow-tab'}
-              key={id}
-              onClick={() => setStep(id as Step)}
-              type="button"
-            >
-              {label}
-            </button>
-          ))}
-        </nav>
+        </button>
 
         <div className="project-progress">
           <span>{activeProject.name}</span>
@@ -350,15 +490,107 @@ export default function App() {
           </div>
           <strong>{completion}%</strong>
         </div>
+
+        <button className="secondary-action" onClick={() => setStep('setup')} type="button">
+          New Project
+        </button>
       </header>
 
-      <section className="workspace">
+      <div className="app-body">
+        <aside className="sidebar" aria-label="Sidebar navigation">
+          <section className="sidebar-section">
+            <p className="eyebrow">Recents</p>
+
+            <label>
+              <span>Project</span>
+              <select
+                value={selectedProject ? String(selectedProject) : ''}
+                onChange={(event) => {
+                  const val = event.target.value;
+                  if (val) {
+                    const id = Number(val);
+                    setActiveProjectId(id);
+                    setSelectedProject(id);
+                    setRecentScene('');
+                    setStep('dashboard');
+                  } else {
+                    setSelectedProject(null);
+                    setRecentScene('');
+                  }
+                }}
+              >
+                <option value="">Select project...</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {selectedProject && (
+              <label>
+                <span>Scene</span>
+                <select
+                  value={recentScene}
+                  onChange={(event) => {
+                    const val = event.target.value;
+                    setRecentScene(val);
+                    if (val) {
+                      setStep('scenes');
+                    }
+                  }}
+                >
+                  <option value="">Select scene...</option>
+                  {sceneOptions.map((sceneName) => (
+                    <option key={sceneName} value={sceneName}>
+                      {sceneName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {selectedProject && recentScene && (
+              <label>
+                <span>Shot</span>
+                <select
+                  value={String(selectedShot.id)}
+                  onChange={(event) => {
+                    setSelectedShotId(Number(event.target.value));
+                    setStep('shots');
+                  }}
+                >
+                  <option value="">Select shot...</option>
+                  {shotsForRecentScene.map((shot) => (
+                    <option key={shot.id} value={shot.id}>
+                      {`Shot ${String(shot.id).padStart(2, '0')} - ${shot.scene}`}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </section>
+        </aside>
+
+        <section className="workspace">
         {step === 'dashboard' ? (
           <Dashboard
             projects={projects}
-            onNew={() => setStep('setup')}
+            onNew={(draft) => {
+              setForm((current) => ({
+                ...current,
+                projectName: draft.projectName,
+                script: draft.script,
+                references: draft.references,
+                notes: draft.notes,
+              }));
+              setStep('setup');
+            }}
             onOpen={(projectId) => {
               setActiveProjectId(projectId);
+              setSelectedProject(projectId);
+              setRecentScene(scenes[0]?.title ?? '');
               setStep('shots');
             }}
           />
@@ -378,7 +610,7 @@ export default function App() {
             beats={beats}
             onBeatChange={setBeats}
             onBack={() => setStep('setup')}
-            onConfirm={() => setStep(form.skipScenes ? 'shots' : 'scenes')}
+            onConfirm={() => setStep(form.skipScenes ? 'references' : 'scenes')}
           />
         ) : null}
 
@@ -387,13 +619,23 @@ export default function App() {
             scenes={scenes}
             onSceneChange={setScenes}
             onBack={() => setStep(form.skipStoryboard ? 'setup' : 'storyboard')}
+            onConfirm={() => setStep('references')}
+          />
+        ) : null}
+
+        {step === 'references' ? (
+          <ReferenceMapStep
+            project={activeProject}
+            onChange={updateProjectReferenceMap}
+            onBack={() => setStep(form.skipScenes ? (form.skipStoryboard ? 'setup' : 'storyboard') : 'scenes')}
             onConfirm={() => setStep('shots')}
           />
         ) : null}
 
         {step === 'shots' ? (
           <Shots
-            shots={shots}
+            shots={orderedShots}
+            multiShotSuggestions={multiShotSuggestions}
             selectedShot={selectedShot}
             onSelect={setSelectedShotId}
             onStatus={toggleShotStatus}
@@ -412,7 +654,8 @@ export default function App() {
             onSave={saveExport}
           />
         ) : null}
-      </section>
+        </section>
+      </div>
     </main>
   );
 }
@@ -423,7 +666,7 @@ function Dashboard({
   onOpen,
 }: {
   projects: Project[];
-  onNew: () => void;
+  onNew: (draft: { projectName: string; script: string; references: string; notes: string }) => void;
   onOpen: (projectId: number) => void;
 }) {
   const [showCard, setShowCard] = useState(false);
@@ -444,9 +687,9 @@ function Dashboard({
         <div style={{ padding: 20 }}>
           <NewProjectCard
             onCancel={() => setShowCard(false)}
-            onStart={() => {
+            onCreate={(draft) => {
               setShowCard(false);
-              onNew();
+              onNew(draft);
             }}
           />
         </div>
@@ -466,6 +709,16 @@ function Dashboard({
                   {project.platforms.map((platform) => (
                     <span key={platform}>{platform}</span>
                   ))}
+                </div>
+                <div className="reference-row">
+                  <span className="reference-label">Reference map</span>
+                  <div className="chip-grid compact">
+                    {referenceCategories.map((category) => (
+                      <span className="chip selected" key={category.id}>
+                        {category.label}: {countReferenceLines(project.referenceMap[category.id])}
+                      </span>
+                    ))}
+                  </div>
                 </div>
                 <div className="timeline-strip" aria-label={`${percent}% complete`}>
                   {Array.from({ length: project.shotsTotal }).map((_, index) => (
@@ -762,8 +1015,76 @@ function Scenes({
   );
 }
 
+function ReferenceMapStep({
+  project,
+  onChange,
+  onBack,
+  onConfirm,
+}: {
+  project: Project;
+  onChange: (category: ReferenceCategory, value: string) => void;
+  onBack: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="view">
+      <header className="view-header">
+        <div>
+          <p className="eyebrow">Reference map</p>
+          <h2>Generate image prompts, then capture reference IDs</h2>
+        </div>
+        <div className="action-row">
+          <button className="secondary-action" onClick={onBack} type="button">
+            Back
+          </button>
+          <button className="primary-action" onClick={onConfirm} type="button">
+            Continue to shots
+          </button>
+        </div>
+      </header>
+
+      <div className="reference-step-grid">
+        <section className="reference-prompt-panel" aria-label="Reference image prompts">
+          <div className="panel-heading-row">
+            <div>
+              <p className="eyebrow">Prompt prep</p>
+              <h3>Generate images for everything shared across the scenes</h3>
+            </div>
+            <span className="reference-label">Global assets</span>
+          </div>
+
+          <div className="reference-prompt-grid">
+            {referenceCategories.map((category) => (
+              <article className="reference-prompt-card" key={category.id}>
+                <div className="card-topline">
+                  <span>{category.label}</span>
+                  <span>{project.references.length ? 'Linked' : 'Needs IDs'}</span>
+                </div>
+                <p>{buildReferencePrompt(category.id, project)}</p>
+                <div className="multishot-footer">
+                  <span>{category.placeholder}</span>
+                  <button className="secondary-action" type="button">
+                    Copy prompt
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="reference-note">
+            If a generator uses Soul IDs or another model-specific asset ID, generate the image first, capture that ID, and paste it into the matching field below.
+          </div>
+        </section>
+
+        <ReferenceMapPanel project={project} onChange={onChange} />
+      </div>
+    </div>
+  );
+}
+
 function Shots({
   shots,
+  multiShotSuggestions,
   selectedShot,
   onSelect,
   onStatus,
@@ -771,6 +1092,7 @@ function Shots({
   onExport,
 }: {
   shots: Shot[];
+  multiShotSuggestions: MultiShotSuggestion[];
   selectedShot: Shot;
   onSelect: (id: number) => void;
   onStatus: (id: number) => void;
@@ -799,82 +1121,158 @@ function Shots({
               type="button"
             >
               <span>Shot {String(shot.id).padStart(2, '0')}</span>
-              <small>{shot.size} / {shot.duration}</small>
-              <strong>{shot.status === 'done' ? 'Done' : 'To do'}</strong>
+              <span className={`status-dot ${shot.status}`} />
             </button>
           ))}
         </div>
 
-        <article className="shot-detail">
-          <div className="shot-title-row">
-            <div>
-              <span className="index-pill">Shot {String(selectedShot.id).padStart(2, '0')}</span>
-              <h3>{selectedShot.size} / {selectedShot.motion} / {selectedShot.duration}</h3>
+        <div className="shot-workspace">
+          <MultiShotPanel suggestions={multiShotSuggestions} />
+
+          <article className="shot-detail">
+            <div className="shot-title-row">
+              <div>
+                <span className="index-pill">Shot {String(selectedShot.id).padStart(2, '0')}</span>
+                <h3>{selectedShot.size} / {selectedShot.motion} / {selectedShot.duration}</h3>
+              </div>
+              <button className={selectedShot.status === 'done' ? 'done-button' : 'primary-action'} onClick={() => onStatus(selectedShot.id)} type="button">
+                {selectedShot.status === 'done' ? 'Marked Done' : 'Mark Done'}
+              </button>
             </div>
-            <button className={selectedShot.status === 'done' ? 'done-button' : 'primary-action'} onClick={() => onStatus(selectedShot.id)} type="button">
-              {selectedShot.status === 'done' ? 'Marked Done' : 'Mark Done'}
-            </button>
-          </div>
 
-          <div className="form-grid compact">
-            <label>
-              <span>Model</span>
-              <select
-                value={selectedShot.model}
-                onChange={(event) => onUpdate(selectedShot.id, 'model', event.target.value)}
-              >
-                {modelOptions.map((model) => (
-                  <option key={model}>{model}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Refs</span>
-              <input
-                value={selectedShot.refs}
-                onChange={(event) => onUpdate(selectedShot.id, 'refs', event.target.value)}
-              />
-            </label>
-            <label className="span-two">
-              <span>First frame prompt</span>
-              <textarea
-                value={selectedShot.firstFrame}
-                onChange={(event) => onUpdate(selectedShot.id, 'firstFrame', event.target.value)}
-                rows={3}
-              />
-            </label>
-            <label className="span-two">
-              <span>Final prompt</span>
-              <textarea
-                value={selectedShot.prompt}
-                onChange={(event) => onUpdate(selectedShot.id, 'prompt', event.target.value)}
-                rows={5}
-              />
-            </label>
-            <label className="span-two">
-              <span>Note or clip link</span>
-              <input
-                value={selectedShot.note}
-                onChange={(event) => onUpdate(selectedShot.id, 'note', event.target.value)}
-                placeholder="Paste clip link or execution note..."
-              />
-            </label>
-          </div>
+            <div className="form-grid compact">
+              <label>
+                <span>Model</span>
+                <select
+                  value={selectedShot.model}
+                  onChange={(event) => onUpdate(selectedShot.id, 'model', event.target.value)}
+                >
+                  {modelOptions.map((model) => (
+                    <option key={model}>{model}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>Refs</span>
+                <input
+                  value={selectedShot.refs}
+                  onChange={(event) => onUpdate(selectedShot.id, 'refs', event.target.value)}
+                />
+              </label>
+              <label className="span-two">
+                <span>First frame prompt</span>
+                <textarea
+                  value={selectedShot.firstFrame}
+                  onChange={(event) => onUpdate(selectedShot.id, 'firstFrame', event.target.value)}
+                  rows={3}
+                />
+              </label>
+              <label className="span-two">
+                <span>Final prompt</span>
+                <textarea
+                  value={selectedShot.prompt}
+                  onChange={(event) => onUpdate(selectedShot.id, 'prompt', event.target.value)}
+                  rows={5}
+                />
+              </label>
+              <label className="span-two">
+                <span>Note or clip link</span>
+                <input
+                  value={selectedShot.note}
+                  onChange={(event) => onUpdate(selectedShot.id, 'note', event.target.value)}
+                  placeholder="Paste clip link or execution note..."
+                />
+              </label>
+            </div>
 
-          <div className="action-row">
-            <button className="secondary-action" type="button" title="Copy prompt">
-              Copy
-            </button>
-            <button className="secondary-action" type="button">
-              Regen
-            </button>
-            <button className="secondary-action" type="button">
-              Refine selected shot
-            </button>
-          </div>
-        </article>
+            <div className="action-row">
+              <button className="secondary-action" type="button" title="Copy prompt">
+                Copy
+              </button>
+              <button className="secondary-action" type="button">
+                Regen
+              </button>
+              <button className="secondary-action" type="button">
+                Refine selected shot
+              </button>
+            </div>
+          </article>
+        </div>
       </div>
     </div>
+  );
+}
+
+function MultiShotPanel({ suggestions }: { suggestions: MultiShotSuggestion[] }) {
+  return (
+    <section className="multishot-panel" aria-label="Suggested multishots">
+      <div className="panel-heading-row">
+        <div>
+          <p className="eyebrow">Multishots</p>
+          <h3>Same-model batch groups</h3>
+        </div>
+        <span className="reference-label">{suggestions.length} suggestions</span>
+      </div>
+
+      <div className="multishot-grid">
+        {suggestions.map((suggestion) => (
+          <article className="multishot-card" key={suggestion.id}>
+            <div className="card-topline">
+              <span>{suggestion.model}</span>
+              <span>{suggestion.duration}</span>
+            </div>
+            <h4>{suggestion.title}</h4>
+            <div className="card-topline">
+              <span>{suggestion.generationMode}</span>
+              <span>{suggestion.shotIds.length} shots</span>
+            </div>
+            <div className="platform-row">
+              {suggestion.shotIds.map((shotId) => (
+                <span key={shotId}>Shot {String(shotId).padStart(2, '0')}</span>
+              ))}
+            </div>
+            <p>{suggestion.prompt}</p>
+            <div className="multishot-footer">
+              <span>{suggestion.refs}</span>
+              <button className="secondary-action" type="button">
+                Queue batch
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ReferenceMapPanel({
+  project,
+  onChange,
+}: {
+  project: Project;
+  onChange: (category: ReferenceCategory, value: string) => void;
+}) {
+  return (
+    <section className="reference-map-panel" aria-label="Project reference map">
+      <div>
+        <p className="eyebrow">Project reference map</p>
+        <h3>People, props, and locations</h3>
+      </div>
+
+      <div className="reference-map-grid">
+        {referenceCategories.map((category) => (
+          <label key={category.id}>
+            <span>{category.label}</span>
+            <textarea
+              value={project.referenceMap[category.id]}
+              onChange={(event) => onChange(category.id, event.target.value)}
+              placeholder={category.placeholder}
+              rows={4}
+            />
+          </label>
+        ))}
+      </div>
+    </section>
   );
 }
 

@@ -1,19 +1,89 @@
-import React from 'react';
+import { FormEvent, useState } from 'react';
 
-export default function NewProjectCard({ onCancel, onStart }: { onCancel: () => void; onStart: () => void }) {
+type NewProjectDraft = {
+  projectName: string;
+  script: string;
+  references: string;
+  notes: string;
+};
+
+export default function NewProjectCard({
+  onCancel,
+  onCreate,
+}: {
+  onCancel: () => void;
+  onCreate: (draft: NewProjectDraft) => void;
+}) {
+  const [draft, setDraft] = useState<NewProjectDraft>({
+    projectName: '',
+    script: '',
+    references: '@lead_ref_01',
+    notes: '',
+  });
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onCreate(draft);
+  }
+
   return (
-    <div className="new-project-card" style={{ padding: 20 }}>
-      <h3 style={{ marginTop: 0 }}>New Project</h3>
-      <p style={{ marginBottom: 12, color: 'rgba(226,232,240,0.78)' }}>Start a new project card. This opens the setup workflow.</p>
+    <form className="project-card new-project-card" onSubmit={handleSubmit}>
+      <div className="card-topline">
+        <span>New project</span>
+        <span>Card UI</span>
+      </div>
 
-      <div style={{ display: 'flex', gap: 12 }}>
-        <button className="primary-action" type="button" onClick={onStart}>
-          Start setup
-        </button>
+      <h3>Create a project</h3>
+      <p>Enter the minimum project details here, then continue into setup.</p>
+
+      <div className="form-grid compact">
+        <label>
+          <span>Project name</span>
+          <input
+            value={draft.projectName}
+            onChange={(event) => setDraft((current) => ({ ...current, projectName: event.target.value }))}
+            placeholder="Launch film, teaser, music video..."
+          />
+        </label>
+
+        <label>
+          <span>Reference IDs</span>
+          <input
+            value={draft.references}
+            onChange={(event) => setDraft((current) => ({ ...current, references: event.target.value }))}
+            placeholder="@lead_ref_01, @room_ref_02"
+          />
+        </label>
+
+        <label className="span-two">
+          <span>Script / summary</span>
+          <textarea
+            value={draft.script}
+            onChange={(event) => setDraft((current) => ({ ...current, script: event.target.value }))}
+            placeholder="Paste a script or short summary..."
+            rows={4}
+          />
+        </label>
+
+        <label className="span-two">
+          <span>Notes</span>
+          <textarea
+            value={draft.notes}
+            onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
+            placeholder="Optional notes for setup..."
+            rows={3}
+          />
+        </label>
+      </div>
+
+      <div className="card-actions" style={{ marginTop: 16 }}>
         <button className="secondary-action" type="button" onClick={onCancel}>
           Cancel
         </button>
+        <button className="primary-action" type="submit">
+          Continue to setup
+        </button>
       </div>
-    </div>
+    </form>
   );
 }
