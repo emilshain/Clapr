@@ -37,20 +37,29 @@ button {
 .app-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 292px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
   background:
     linear-gradient(90deg, rgba(28, 95, 102, 0.08), transparent 34%),
     linear-gradient(180deg, #f7f8f6 0%, #e8edf1 100%);
 }
 
-.sidebar {
-  min-height: 100vh;
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 28px;
-  padding: 26px;
-  border-right: 1px solid #d4dbe1;
-  background: #fbfbf8;
+  grid-template-columns: minmax(150px, 220px) minmax(0, 1fr) minmax(190px, 250px);
+  gap: 18px;
+  align-items: center;
+  padding: 14px 28px;
+  border-bottom: 1px solid #d4dbe1;
+  background: rgba(251, 251, 248, 0.94);
+  backdrop-filter: blur(14px);
+}
+
+.brand-block {
+  display: grid;
+  gap: 2px;
 }
 
 .eyebrow {
@@ -70,11 +79,10 @@ p {
 }
 
 h1 {
-  max-width: 11ch;
   margin-bottom: 0;
   color: #111820;
-  font-size: 2rem;
-  line-height: 1.08;
+  font-size: 1.25rem;
+  line-height: 1.12;
   letter-spacing: 0;
 }
 
@@ -94,13 +102,15 @@ h3 {
   letter-spacing: 0;
 }
 
-.nav-stack {
-  display: grid;
-  gap: 8px;
-  align-content: start;
+.workflow-tabs {
+  min-width: 0;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
 }
 
-.nav-item,
+.workflow-tab,
 .shot-tab {
   width: 100%;
   min-height: 46px;
@@ -116,7 +126,19 @@ h3 {
   text-align: left;
 }
 
-.nav-item.active,
+.workflow-tab {
+  width: auto;
+  min-height: 38px;
+  flex: 0 0 auto;
+  justify-content: center;
+  padding: 0 12px;
+  border-color: #d4dbe1;
+  background: #ffffff;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.workflow-tab.active,
 .shot-tab.active {
   border-color: #bac7cd;
   background: #edf3f3;
@@ -124,22 +146,37 @@ h3 {
   font-weight: 800;
 }
 
-.status-panel {
+.project-progress {
   display: grid;
-  gap: 8px;
-  padding: 14px;
-  border: 1px solid #d5dee2;
-  border-radius: 8px;
-  background: #f2f5f4;
+  grid-template-columns: minmax(0, 1fr) 62px;
+  gap: 6px 10px;
+  align-items: center;
 }
 
-.status-panel span,
-.status-panel small,
+.project-progress span,
 .card-topline,
 .scene-meta,
 .shot-tab small {
   color: #65717b;
   font-size: 0.82rem;
+}
+
+.project-progress span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-progress .meter {
+  grid-column: 1;
+}
+
+.project-progress strong {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  justify-self: end;
+  color: #1c5f66;
+  font-size: 0.94rem;
 }
 
 .meter {
@@ -162,8 +199,9 @@ h3 {
 }
 
 .view {
-  max-width: 1180px;
-  min-height: calc(100vh - 56px);
+  max-width: 1320px;
+  min-height: calc(100vh - 94px);
+  margin: 0 auto;
   display: grid;
   gap: 22px;
   align-content: start;
@@ -473,19 +511,9 @@ textarea:focus {
 }
 
 @media (max-width: 1040px) {
-  .app-shell {
+  .topbar {
     grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    min-height: auto;
-    grid-template-rows: auto auto auto;
-    border-right: 0;
-    border-bottom: 1px solid #d4dbe1;
-  }
-
-  .nav-stack {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
   }
 
   h1 {
@@ -499,7 +527,7 @@ textarea:focus {
 }
 
 @media (max-width: 720px) {
-  .sidebar,
+  .topbar,
   .workspace {
     padding: 18px;
   }
@@ -516,7 +544,6 @@ textarea:focus {
     flex-direction: column;
   }
 
-  .nav-stack,
   .form-grid,
   .two-col,
   .export-toolbar {
