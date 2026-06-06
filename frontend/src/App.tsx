@@ -1,4 +1,5 @@
 import { FormEvent, useMemo, useState } from 'react';
+import { parseScript, sendChat } from './api/chat';
 import NewProjectCard from './components/NewProjectCard';
 
 type Step = 'dashboard' | 'create' | 'project' | 'setup' | 'storyboard' | 'scenes' | 'references' | 'shotDemo' | 'shots' | 'export';
@@ -94,8 +95,8 @@ type IndividualImagePrompt = PromptSheetPrompt & {
 
 
 
-const platformOptions = ['Kling', 'Veo', 'Higgsfield', 'Runway'];
-const modelOptions = ['Kling 3.0', 'Veo 3', 'Higgsfield Soul', 'Runway Gen-4'];
+const platformOptions = ['Kling', 'Seedance', 'Van'];
+const modelOptions = ['Kling', 'Seedance', 'Van'];
 const imageReferenceCategories: { id: ImageReferenceCategory; label: string; placeholder: string }[] = [
   { id: 'people', label: 'People', placeholder: 'Lead actor -> @lead_ref_01' },
   { id: 'props', label: 'Props', placeholder: 'Hero phone -> @phone_ref_01' },
@@ -133,7 +134,7 @@ const initialProjects: Project[] = [
     name: 'Monsoon Launch Film',
     scriptTitle: 'The first rain',
     date: 'Jun 6, 2026',
-    platforms: ['Kling', 'Veo'],
+    platforms: ['Kling', 'Seedance'],
     references: ['@lead_ref_01', '@rain_ref_02'],
     referenceMap: {
       people: 'Lead -> @lead_ref_01',
@@ -151,7 +152,7 @@ const initialProjects: Project[] = [
     name: 'Founder Teaser',
     scriptTitle: 'Three promises',
     date: 'Jun 5, 2026',
-    platforms: ['Higgsfield'],
+    platforms: ['Seedance'],
     references: ['@founder_ref_01'],
     referenceMap: {
       people: 'Founder -> @founder_ref_01',
@@ -169,7 +170,7 @@ const initialProjects: Project[] = [
     name: 'Product Demo Draft',
     scriptTitle: 'Opening walkthrough',
     date: 'Jun 4, 2026',
-    platforms: ['Runway'],
+    platforms: ['Van'],
     references: ['@host_ref_01'],
     referenceMap: {
       people: 'Host -> @host_ref_01',
@@ -245,7 +246,7 @@ const defaultShots: Shot[] = [
     size: 'Wide',
     motion: 'Slow push in',
     duration: '6s',
-    model: 'Kling 3.0',
+    model: 'Kling',
     refs: '@lead_ref_01',
     firstFrame: 'Studio table with script pages, reference thumbnails, and a clean shot grid.',
     prompt: 'Wide cinematic studio table, morning window light, script pages beside reference map, slow push in, tactile planning mood, realistic detail.',
@@ -258,7 +259,7 @@ const defaultShots: Shot[] = [
     size: 'Medium Close-Up',
     motion: 'Dolly in',
     duration: '4s',
-    model: 'Veo 3',
+    model: 'Seedance',
     refs: '@lead_ref_01',
     firstFrame: 'Creator hand circling the key line in a printed script.',
     prompt: 'Medium close-up of creator marking a key script line, dolly in, soft paper texture, focused calm, natural color, no text overlays.',
@@ -271,7 +272,7 @@ const defaultShots: Shot[] = [
     size: 'Insert',
     motion: 'Static',
     duration: '5s',
-    model: 'Higgsfield Soul',
+    model: 'Van',
     refs: '@lead_ref_01, @room_ref_02',
     firstFrame: 'Prompt card with model, duration, and reference ids arranged in a compact workspace.',
     prompt: 'Clean interface insert, prompt card for a video model, visible reference tokens, compact professional workflow, crisp light, realistic UI surface.',
@@ -284,7 +285,7 @@ const defaultShots: Shot[] = [
     size: 'Tracking',
     motion: 'Left to right',
     duration: '7s',
-    model: 'Runway Gen-4',
+    model: 'Kling',
     refs: '@timeline_ref_01',
     firstFrame: 'Shot cards advancing from draft to done on a horizontal timeline.',
     prompt: 'Tracking move across shot cards, draft prompts becoming done clips, restrained product interface, sharp motion, editorial rhythm.',
@@ -297,7 +298,7 @@ const emptyForm: SetupForm = {
   projectName: '',
   script: '',
   timeLimit: '',
-  platforms: ['Kling', 'Veo'],
+  platforms: ['Kling', 'Seedance'],
   referenceMap: {
     people: 'Lead -> @lead_ref_01',
     props: '',
@@ -615,6 +616,7 @@ export default function App() {
   const [stepHistory, setStepHistory] = useState<Step[]>([]);
   const [favoriteProjectIds, setFavoriteProjectIds] = useState<number[]>([1]);
   const [sidebarNotice, setSidebarNotice] = useState('');
+  const [isParsingScript, setIsParsingScript] = useState(false);
 
   const activeProject = projects.find((project) => project.id === activeProjectId) ?? projects[0];
   const favoriteProjects = projects.filter((project) => favoriteProjectIds.includes(project.id));
@@ -742,8 +744,37 @@ export default function App() {
     );
   }
 
-  function handleCreateProject(event: FormEvent<HTMLFormElement>) {
+  async function handleCreateProject(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    let projectBeats = beats;
+    let projectScenes = scenes;
+    let projectShots = shots;
+
+    if (form.script.trim()) {
+      setIsParsingScript(true);
+      try {
+        const result = await parseScript({
+          script: form.script,
+          project_name: form.projectName,
+          time_limit: form.timeLimit,
+          platforms: form.platforms,
+          reference_map: form.referenceMap,
+          notes: form.notes,
+        });
+        projectBeats = result.beats as typeof beats;
+        projectScenes = result.scenes as typeof scenes;
+        projectShots = result.shots as typeof shots;
+        setBeats(projectBeats);
+        setScenes(projectScenes);
+        setShots(projectShots);
+      } catch (err) {
+        console.error('Script parsing failed, using defaults:', err);
+      } finally {
+        setIsParsingScript(false);
+      }
+    }
+
     const nextStep = form.skipStoryboard ? (form.skipScenes ? 'references' : 'scenes') : 'storyboard';
     const newProject: Project = {
       id: Date.now(),
@@ -753,8 +784,8 @@ export default function App() {
       platforms: form.platforms,
       references: collectReferenceIds(form.referenceMap),
       referenceMap: form.referenceMap,
-      shotsDone: form.skipStoryboard && form.skipScenes ? 0 : doneCount,
-      shotsTotal: shots.length,
+      shotsDone: 0,
+      shotsTotal: projectShots.length,
       stage: nextStep,
       exported: false,
     };
@@ -762,7 +793,7 @@ export default function App() {
     setProjects((current) => [newProject, ...current]);
     setActiveProjectId(newProject.id);
     setSelectedProject(newProject.id);
-    setRecentScene(scenes[0]?.title ?? '');
+    setRecentScene(projectScenes[0]?.title ?? '');
     navigateTo(nextStep);
   }
 
@@ -979,7 +1010,9 @@ export default function App() {
                             >
                               <span>Shot {String(shot.id).padStart(2, '0')}</span>
                             </button>
-                            <span className={`status-dot ${shot.status}`} />
+                            <span className={`status-box ${shot.status}`}>
+                              {shot.status === 'done' ? '✓' : '☐'}
+                            </span>
                           </div>
                         ))}
                     </div>
@@ -1112,7 +1145,7 @@ export default function App() {
         <section className="sidebar-section">
           <p className="eyebrow">Favorites</p>
           <div className="sidebar-list">
-            {favoriteProjects.map((project) => renderProjectSidebarGroup(project, { showCompleteToggle: false }))}
+            {favoriteProjects.map((project) => renderProjectSidebarGroup(project, { showCompleteToggle: true }))}
           </div>
         </section>
 
@@ -1131,7 +1164,6 @@ export default function App() {
                   type="button"
                 >
                   <span className="project-title-text">{project.name}</span>
-                  <span className="draft-sidebar-stage">{projectStageLabel(project.stage)}</span>
                 </button>
               ))
             ) : (
@@ -1214,6 +1246,7 @@ export default function App() {
             onChange={setForm}
             onSubmit={handleCreateProject}
             onTogglePlatform={togglePlatform}
+            isSubmitting={isParsingScript}
           />
         ) : null}
 
@@ -1512,7 +1545,9 @@ function ProjectPage({
                       <span className="index-pill">Shot {String(shot.id).padStart(2, '0')}</span>
                       <h4>{shot.size} / {shot.motion}</h4>
                       <p>{shot.prompt}</p>
-                      <span className={`status-dot ${shot.status}`} />
+                      <span className={`status-box ${shot.status}`}>
+                        {shot.status === 'done' ? '✓' : '☐'}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -1530,11 +1565,13 @@ function Setup({
   onChange,
   onSubmit,
   onTogglePlatform,
+  isSubmitting,
 }: {
   form: SetupForm;
   onChange: (form: SetupForm) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onTogglePlatform: (platform: string) => void;
+  isSubmitting?: boolean;
 }) {
   return (
     <form className="view form-view" onSubmit={onSubmit}>
@@ -1543,8 +1580,8 @@ function Setup({
           <p className="eyebrow">New project setup</p>
           <h2>Script to shot plan</h2>
         </div>
-        <button className="primary-action" type="submit">
-          Continue
+        <button className="primary-action" type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Analyzing script…' : 'Continue'}
         </button>
       </header>
 
@@ -1810,7 +1847,9 @@ function Scenes({
                   <span className="index-pill">Shot {String(shot.id).padStart(2, '0')}</span>
                   <h4>{shot.size} / {shot.motion}</h4>
                   <p>{shot.prompt}</p>
-                  <span className={`status-dot ${shot.status}`} />
+                  <span className={`status-box ${shot.status}`}>
+                    {shot.status === 'done' ? '✓' : '☐'}
+                  </span>
                 </button>
               ))}
             </div>
@@ -1914,9 +1953,11 @@ function ReferenceMapStep({
 }) {
   const individualImagePrompts = buildIndividualImagePrompts(project);
   const [promptOverrides, setPromptOverrides] = useState<Record<string, string>>({});
+  const [imageModelOverrides, setImageModelOverrides] = useState<Record<string, string>>({});
   const [activeRefineKey, setActiveRefineKey] = useState<string | null>(null);
   const [refineText, setRefineText] = useState('');
   const [copiedPromptKey, setCopiedPromptKey] = useState<string | null>(null);
+  const [isGeneratingRef, setIsGeneratingRef] = useState(false);
 
   function copyPrompt(prompt: string, promptKey: string) {
     navigator.clipboard.writeText(prompt);
@@ -1936,22 +1977,63 @@ function ReferenceMapStep({
     setRefineText('');
   }
 
-  function refinePrompt(promptKey: string, currentPrompt: string) {
+  async function refinePrompt(promptKey: string, currentPrompt: string, categoryId: string) {
     const trimmedSuggestion = refineText.trim();
-
     if (!trimmedSuggestion) {
       return;
     }
 
-    setPromptOverrides((current) => ({
-      ...current,
-      [promptKey]: `${currentPrompt} Apply this refinement: ${trimmedSuggestion}.`,
-    }));
-    cancelRefine();
+    setIsGeneratingRef(true);
+    try {
+      const result = await sendChat(
+        [
+          {
+            role: 'user',
+            content: `Refine this reference image prompt. Also choose the best image model ('Google Gemini Pro' or 'Soul Cinema') based on the subject and guidelines.
+Current prompt: ${currentPrompt}
+Subject category: ${categoryId}
+Refinement request: ${trimmedSuggestion}
+
+Return a JSON object in this exact format:
+{
+  "model": "Google Gemini Pro" | "Soul Cinema",
+  "prompt": "refined prompt text here"
+}`
+          }
+        ],
+        'You are a Clapr generation assistant. Output ONLY valid JSON.'
+      );
+
+      const parsed = JSON.parse(result);
+      if (parsed.model && parsed.prompt) {
+        setImageModelOverrides((current) => ({
+          ...current,
+          [promptKey]: parsed.model,
+        }));
+        setPromptOverrides((current) => ({
+          ...current,
+          [promptKey]: parsed.prompt,
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+      setPromptOverrides((current) => ({
+        ...current,
+        [promptKey]: `${currentPrompt} Apply this refinement: ${trimmedSuggestion}.`,
+      }));
+    } finally {
+      setIsGeneratingRef(false);
+      cancelRefine();
+    }
   }
 
   function regeneratePrompt(promptKey: string) {
     setPromptOverrides((current) => {
+      const next = { ...current };
+      delete next[promptKey];
+      return next;
+    });
+    setImageModelOverrides((current) => {
       const next = { ...current };
       delete next[promptKey];
       return next;
@@ -2014,13 +2096,54 @@ function ReferenceMapStep({
                         const prompt = promptOverrides[promptKey] ?? item.prompt;
                         const isRefining = activeRefineKey === promptKey;
 
+                        const defaultModel = category.id === 'people' ? 'Soul Cinema' : 'Google Gemini Pro';
+                        const currentModel = imageModelOverrides[promptKey] ?? defaultModel;
+
                         return (
                           <article className="reference-prompt-card" key={promptKey}>
-                            <div className="card-topline">
-                              <span>{item.title}</span>
-                              <span>{item.meta}</span>
+                            <div className="card-topline" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <span style={{ fontWeight: 600 }}>{item.title}</span>
+                                <span className="reference-label" style={{ fontSize: '0.75rem', padding: '2px 6px', width: 'fit-content' }}>{item.meta}</span>
+                              </div>
+                              <select
+                                value={currentModel}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setImageModelOverrides((current) => ({
+                                    ...current,
+                                    [promptKey]: val,
+                                  }));
+                                }}
+                                style={{
+                                  background: 'var(--surface-soft)',
+                                  border: '1px solid var(--border)',
+                                  color: 'var(--text)',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '600',
+                                  borderRadius: '4px',
+                                  padding: '2px 6px',
+                                  height: '24px',
+                                  width: 'auto',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                <option value="Google Gemini Pro">Gemini Pro</option>
+                                <option value="Soul Cinema">Soul Cinema</option>
+                              </select>
                             </div>
-                            <p className="reference-prompt-preview">{prompt}</p>
+                            <textarea
+                              className="reference-prompt-preview-textarea"
+                              value={prompt}
+                              onChange={(event) => {
+                                const val = event.target.value;
+                                setPromptOverrides((current) => ({
+                                  ...current,
+                                  [promptKey]: val,
+                                }));
+                              }}
+                              rows={3}
+                            />
                             {isRefining ? (
                               <div className="prompt-refine-box">
                                 <textarea
@@ -2031,23 +2154,23 @@ function ReferenceMapStep({
                                   value={refineText}
                                 />
                                 <div className="prompt-card-actions">
-                                  <button className="secondary-action compact-action" onClick={cancelRefine} type="button">
+                                  <button className="secondary-action compact-action" onClick={cancelRefine} type="button" disabled={isGeneratingRef}>
                                     Cancel
                                   </button>
-                                  <button className="primary-action compact-action" onClick={() => refinePrompt(promptKey, prompt)} type="button">
-                                    Refine
+                                  <button className="primary-action compact-action" onClick={() => refinePrompt(promptKey, prompt, category.id)} type="button" disabled={isGeneratingRef}>
+                                    {isGeneratingRef ? 'Refining...' : 'Refine'}
                                   </button>
                                 </div>
                               </div>
                             ) : (
                               <div className="prompt-card-actions">
-                                <button className="secondary-action compact-action" onClick={() => openRefine(promptKey)} type="button">
+                                <button className="secondary-action compact-action" onClick={() => openRefine(promptKey)} type="button" disabled={isGeneratingRef}>
                                   Refine
                                 </button>
-                                <button className="secondary-action compact-action" onClick={() => regeneratePrompt(promptKey)} type="button">
+                                <button className="secondary-action compact-action" onClick={() => regeneratePrompt(promptKey)} type="button" disabled={isGeneratingRef}>
                                   Regenerate
                                 </button>
-                                <button className="secondary-action compact-action" onClick={() => copyPrompt(prompt, promptKey)} type="button">
+                                <button className="secondary-action compact-action" onClick={() => copyPrompt(prompt, promptKey)} type="button" disabled={isGeneratingRef}>
                                   {copiedPromptKey === promptKey ? 'Copied' : 'Copy'}
                                 </button>
                               </div>
@@ -2162,6 +2285,9 @@ function Shots({
 }) {
   const [copiedShotPrompt, setCopiedShotPrompt] = useState(false);
   const [shotPromptAction, setShotPromptAction] = useState<'idle' | 'regenerated' | 'refine'>('idle');
+  const [isRefining, setIsRefining] = useState(false);
+  const [refineText, setRefineText] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   function copyShotPrompt() {
     navigator.clipboard.writeText(selectedShot.prompt);
@@ -2176,6 +2302,90 @@ function Shots({
     window.setTimeout(() => {
       setShotPromptAction((current) => (current === action ? 'idle' : current));
     }, 1400);
+  }
+
+  async function handleRegenerate() {
+    setIsGenerating(true);
+    try {
+      const promptResult = await sendChat(
+        [
+          {
+            role: 'user',
+            content: `Regenerate a cinematic prompt and choose the best video model ('Kling', 'Seedance', or 'Van') for this shot.
+Shot metadata:
+Scene: ${selectedShot.scene}
+Size: ${selectedShot.size}
+Motion: ${selectedShot.motion}
+Duration: ${selectedShot.duration}
+Refs: ${selectedShot.refs}
+First frame: ${selectedShot.firstFrame}
+
+Return a JSON object in this exact format:
+{
+  "model": "Kling" | "Seedance" | "Van",
+  "prompt": "your generated prompt text here"
+}`
+          }
+        ],
+        'You are a Clapr generation assistant. Use the model guidelines to select the best model and write a production-ready prompt. Output ONLY valid JSON.'
+      );
+      
+      const parsed = JSON.parse(promptResult);
+      if (parsed.model && parsed.prompt) {
+        onUpdate(selectedShot.id, 'model', parsed.model);
+        onUpdate(selectedShot.id, 'prompt', parsed.prompt);
+      }
+      showShotPromptAction('regenerated');
+    } catch (err) {
+      console.error(err);
+      const fallbackModel = selectedShot.size === 'Insert' || selectedShot.size === 'Extreme Close-Up' ? 'Van' : (selectedShot.motion === 'Slow push in' ? 'Seedance' : 'Kling');
+      const fallbackPrompt = `Cinematic ${selectedShot.size} shot in ${selectedShot.scene}. Motion: ${selectedShot.motion}. Model: ${fallbackModel}.`;
+      onUpdate(selectedShot.id, 'model', fallbackModel);
+      onUpdate(selectedShot.id, 'prompt', fallbackPrompt);
+      showShotPromptAction('regenerated');
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
+  async function handleRefine() {
+    const trimmed = refineText.trim();
+    if (!trimmed) return;
+    setIsGenerating(true);
+    try {
+      const refinedPrompt = await sendChat(
+        [
+          {
+            role: 'user',
+            content: `Refine this cinematic prompt. Also determine if the model needs to change to one of ('Kling', 'Seedance', 'Van') based on the instruction and the guidelines.
+Current prompt: ${selectedShot.prompt}
+Current model: ${selectedShot.model}
+Refinement instruction: ${trimmed}
+
+Return a JSON object in this exact format:
+{
+  "model": "Kling" | "Seedance" | "Van",
+  "prompt": "your refined prompt text here"
+}`
+          }
+        ],
+        'You are a Clapr generation assistant. Output ONLY valid JSON.'
+      );
+      const parsed = JSON.parse(refinedPrompt);
+      if (parsed.model && parsed.prompt) {
+        onUpdate(selectedShot.id, 'model', parsed.model);
+        onUpdate(selectedShot.id, 'prompt', parsed.prompt);
+      }
+      setIsRefining(false);
+      setRefineText('');
+    } catch (err) {
+      console.error(err);
+      onUpdate(selectedShot.id, 'prompt', `${selectedShot.prompt} [Refinement: ${trimmed}]`);
+      setIsRefining(false);
+      setRefineText('');
+    } finally {
+      setIsGenerating(false);
+    }
   }
 
   return (
@@ -2204,7 +2414,9 @@ function Shots({
               type="button"
             >
               <span>Shot {String(shot.id).padStart(2, '0')}</span>
-              <span className={`status-dot ${shot.status}`} />
+              <span className={`status-box ${shot.status}`}>
+                {shot.status === 'done' ? '✓' : '☐'}
+              </span>
             </button>
           ))}
         </div>
@@ -2255,6 +2467,26 @@ function Shots({
                     rows={5}
                   />
                 </label>
+                {isRefining && (
+                  <div className="prompt-refine-box" style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'var(--surface-soft)', padding: '10px', borderRadius: '6px', marginBottom: '14px' }}>
+                    <input
+                      type="text"
+                      placeholder="Enter prompt refinement instruction..."
+                      value={refineText}
+                      onChange={(e) => setRefineText(e.target.value)}
+                      style={{ flex: 1, height: '32px', fontSize: '0.82rem' }}
+                    />
+                    <button
+                      className="primary-action"
+                      type="button"
+                      style={{ minHeight: '32px', height: '32px', padding: '0 12px', fontSize: '0.8rem' }}
+                      onClick={handleRefine}
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? 'Applying...' : 'Apply'}
+                    </button>
+                  </div>
+                )}
                 <label>
                   <span>Note or clip link</span>
                   <input
@@ -2290,7 +2522,9 @@ function Shots({
                 <label>
                   <span>Status</span>
                   <div className="meta-value-row" onClick={() => onStatus(selectedShot.id)} style={{ cursor: 'pointer' }}>
-                    <span className={`status-indicator-dot ${selectedShot.status}`} />
+                    <span className={`status-box ${selectedShot.status}`} style={{ marginRight: '6px' }}>
+                      {selectedShot.status === 'done' ? '✓' : '☐'}
+                    </span>
                     <span style={{ textTransform: 'capitalize', fontWeight: 600 }}>
                       {selectedShot.status === 'done' ? 'Completed' : 'In Progress'}
                     </span>
@@ -2326,18 +2560,18 @@ function Shots({
                   />
                 </label>
 
-                 <div className="meta-actions-stack" style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <button className="meta-action-btn primary" type="button" title="Copy prompt" onClick={copyShotPrompt}>
-                    {copiedShotPrompt ? 'Copied ✓' : 'Copy Prompt'}
-                  </button>
-                  <button className="meta-action-btn" type="button" onClick={() => showShotPromptAction('regenerated')}>
-                    {shotPromptAction === 'regenerated' ? 'Regenerated ✓' : 'Regen Prompt'}
-                  </button>
-                  <button className="meta-action-btn" type="button" onClick={() => showShotPromptAction('refine')}>
-                    {shotPromptAction === 'refine' ? 'Ready to refine ✓' : 'Refine Shot'}
-                  </button>
-                </div>
-              </div>
+                  <div className="meta-actions-stack" style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                   <button className="meta-action-btn primary" type="button" title="Copy prompt" onClick={copyShotPrompt} disabled={isGenerating}>
+                     {copiedShotPrompt ? 'Copied ✓' : 'Copy Prompt'}
+                   </button>
+                   <button className="meta-action-btn" type="button" onClick={handleRegenerate} disabled={isGenerating}>
+                     {isGenerating ? 'Generating...' : (shotPromptAction === 'regenerated' ? 'Regenerated ✓' : 'Regen Prompt')}
+                   </button>
+                   <button className="meta-action-btn" type="button" onClick={() => setIsRefining((r) => !r)} disabled={isGenerating}>
+                     {isRefining ? 'Cancel Refining' : 'Refine Shot'}
+                   </button>
+                 </div>
+               </div>
             </div>
           </article>
         </div>

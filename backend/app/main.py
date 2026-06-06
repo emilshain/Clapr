@@ -4,7 +4,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.schemas.chat import ChatRequest, ChatResponse
+from app.schemas.script import ScriptParseRequest, ScriptParseResponse
 from app.services.chat import generate_chat_reply
+from app.services.script import parse_script
 
 
 def _parse_origins(value: str | None) -> list[str]:
@@ -41,3 +43,13 @@ def chat(payload: ChatRequest) -> ChatResponse:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     return ChatResponse(reply=reply)
+
+
+@app.post("/api/script/parse", response_model=ScriptParseResponse)
+def script_parse(payload: ScriptParseRequest) -> ScriptParseResponse:
+    try:
+        return parse_script(payload)
+    except (ValueError, KeyError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc

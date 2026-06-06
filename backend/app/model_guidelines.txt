@@ -1,0 +1,202 @@
+CLAPR MODEL SELECTION GUIDELINES
+Version: 2.0
+
+═══════════════════════════════════════════════════════════════════
+I. VIDEO GENERATION MODELS  (Kling · Seedance · Van / WAN)
+═══════════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────
+KLING 3.0
+────────────────────────────────────────────────────────────────
+Platform: Higgsfield
+Best for:
+  • Complex physical interactions, fast/chaotic motion
+  • Advanced camera maneuvers: dolly-zooms, sweeps, pan-and-tilts
+  • Epic cinematic scales, fantasy/sci-fi, multi-character action
+  • English-language dialogue (no audio sync needed)
+  • Shots where character @name referencing is required
+  • Multi-shot storyboarding (up to 6 shots in one generation pass)
+
+Duration: 3–15 seconds (any integer value; default 5–10 s)
+  Multi-shot mode: up to 6 shots stitched = max 15 s total
+
+Referencing: @name syntax
+  Bind a Soul Cinema output or reference image to a named subject.
+  Example: "@lead_ref_01 walks toward the camera"
+  Soul ID integration: @ref_id → soul_id token in Higgsfield
+
+Native features: image-to-video · start+end frame anchoring · native audio (optional)
+
+NOT ideal for: explicit/NSFW content (Kling API is censored) · audio-first shots
+
+Keywords: epic, dynamic, sweep, fast, fight, running, interaction, action, camera
+          movement, multi-character, dialogue, complex physics, dolly, crane
+
+────────────────────────────────────────────────────────────────
+SEEDANCE 2.0 (ByteDance)
+────────────────────────────────────────────────────────────────
+Platform: Higgsfield
+Best for:
+  • Audio-first or sound-critical shots — native synchronized audio
+    (lip sync, ambient sounds, music beats, SFX are generated WITH the video)
+  • Complex multi-element visual scenes
+  • Stylized lighting, slow-motion high-drama shots
+  • Dreamy/fantasy, painterly texture, anime/illustration style
+  • Character close-ups with emotional expressions
+
+Duration: FIXED VALUES ONLY — 4, 5, 6, 8, 10, 12, 15 seconds
+  Non-standard durations are REJECTED by the API. Always snap:
+    ≤4 → 4   5 → 5   6 → 6   7 → 8   9 → 10   11 → 12   13–14 → 15
+
+Referencing: Image-based (NO @name text syntax)
+  Pass reference image URL/ID directly to the generation call.
+  Store ref IDs in the shot's refs field for tracking only.
+
+NOT ideal for: shots where sound incurs unwanted compute; @name text binding
+
+Keywords: dreamy, slow-motion, aesthetic, stylized, emotional, close-up, painting,
+          anime, art, soft lighting, audio, sound, music, lip sync, ambient, SFX
+
+────────────────────────────────────────────────────────────────
+VAN / WAN 2.7 (Alibaba — open-source)
+────────────────────────────────────────────────────────────────
+Platform: Higgsfield · Wavespeed · Together AI · local deployment
+Best for:
+  • Explicit, violatable, or NSFW content
+    (open-source model — no platform-level censorship when self-hosted)
+  • Hyper-realistic everyday situations, corporate/business settings
+  • Simple interface inserts, product shots, architectural visualisations
+  • Stable or static camera framing, documentary-style dialogue
+  • Image-anchored consistency: supports endpoint images, nine-image grid,
+    voice audio references, instruction-based editing
+
+Duration: 2–15 seconds (any value in this range)
+Referencing: Image-based anchoring (attach reference image/URL)
+
+Native features: synchronized audio · image+text hybrid input · 1080p output
+
+NOT ideal for: children's content; scenes needing brand-safe polish if explicit
+              content is not intended
+
+Keywords: realistic, corporate, interview, stable, static, insert, product, clean,
+          everyday, dialogue, documentary, NSFW, explicit, uncensored, adult
+
+────────────────────────────────────────────────────────────────
+DURATION QUICK REFERENCE
+────────────────────────────────────────────────────────────────
+Model       | Min | Max | Fixed steps only?
+------------|-----|-----|------------------
+Kling 3.0   |  3s | 15s | No (any integer)
+Seedance 2.0|  4s | 15s | YES: 4,5,6,8,10,12,15 only
+WAN 2.7     |  2s | 15s | No (any integer)
+
+Typical shot lengths:
+  Cutaway / insert         → 4–5 s
+  Standard shot            → 6–8 s
+  Hero / establishing shot → 10–12 s
+  Maximum single clip      → 15 s
+  Clips > 15 s must be split and extended using the platform's Extend feature.
+
+
+═══════════════════════════════════════════════════════════════
+II. IMAGE GENERATION MODELS  (Soul Cinema · Google Gemini Pro)
+═══════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────
+SOUL CINEMA (Higgsfield)
+────────────────────────────────────────────────────────────────
+Best for: stylized character portraits, consistent actors/faces, digital humans,
+          emotional close-ups, cinematic wardrobe, dramatic portrait lighting.
+
+Key feature — Soul ID:
+  A character identity layer that preserves face + style across generations.
+  Workflow:
+    1. Generate the character image with Soul Cinema.
+    2. Save it as a Soul ID token: soul_character_01
+    3. Map reference: @character_ref_01 → soul_character_01  (in Soul IDs field)
+    4. In Kling prompts, use @character_ref_01 to anchor the character.
+
+ALWAYS use Soul Cinema for: people · characters · actors · digital humans
+
+────────────────────────────────────────────────────────────────
+GOOGLE GEMINI PRO
+────────────────────────────────────────────────────────────────
+Best for: complex multi-element scenery, photorealistic locations, architectural
+          set designs, props with precise structural detail, textual elements,
+          complex object composition.
+
+Referencing: Name-based text only — describe elements by descriptive name in the
+  prompt. No @id token system.
+  Example: "the red sports car from the parking-lot reference"
+
+ALWAYS use Gemini Pro for: locations · props · backgrounds · complex scenes
+NOT for: character faces that require stylistic consistency across shots.
+
+
+═══════════════════════════════════════════════════════════════
+III. MODEL DECISION TREE
+═══════════════════════════════════════════════════════════════
+
+FOR VIDEO SHOTS — ask these questions in order:
+  1. Is explicit / NSFW content required?              → Van (WAN)
+  2. Is audio sync critical? (music beat, lip sync,
+     ambient sound is part of the shot's meaning)      → Seedance
+  3. Complex action, fast motion, or multi-character
+     interaction? Epic camera move?                    → Kling
+  4. Slow / dreamy / emotional close-up?               → Seedance
+  5. Stable product insert, UI shot, corporate,
+     documentary dialogue, no sound needed             → Van (WAN)
+  6. Default — cinematic hero shot, epic scale,
+     camera maneuver, English dialogue                 → Kling
+
+FOR IMAGE REFERENCES:
+  1. Subject is a person / character / actor           → Soul Cinema
+  2. Subject is a location / prop / scene / object     → Google Gemini Pro
+
+
+═══════════════════════════════════════════════════════════════
+IV. REFERENCING SYSTEM
+═══════════════════════════════════════════════════════════════
+
+Soul ID / @name flow  (Kling + Soul Cinema):
+  • Generate character → save as Soul ID (soul_char_01)
+  • Map: @char_ref_01 → soul_char_01  (stored in Soul IDs field)
+  • In Kling prompt text: use "@char_ref_01" to bind the character
+
+Seedance image referencing:
+  • Pass reference image file / URL directly to the API call
+  • Do NOT include @token text in the prompt — image IS the anchor
+  • Keep ref IDs in the refs field for tracking
+
+Gemini Pro name referencing:
+  • Describe elements by name in plain prompt text
+  • No special token syntax needed
+
+
+═══════════════════════════════════════════════════════════════
+V. PROMPT WRITING GUIDELINES
+═══════════════════════════════════════════════════════════════
+
+KLING prompts:
+  • Be directive and cinematic: "Wide establishing shot, slow push in…"
+  • Include: shot size · motion type · lighting · mood · subject with @ref token
+  • Multi-shot: list up to 6 shots separated by "|" or as a numbered sequence
+  • Keep under 300 words for best results
+  • Example: "Wide shot of @lead_ref_01 entering a rain-soaked alley, dutch angle,
+    neon reflections on wet pavement, slow dolly in, cinematic 2.39:1"
+
+SEEDANCE prompts:
+  • Lead with audio/sound element if relevant: "Sound of rain on glass…"
+  • Describe atmosphere, texture, and emotional quality
+  • Reference images passed separately — do NOT write @tokens in prompt text
+  • Duration must be snapped to a valid fixed value (see section I)
+  • Example: "Soft piano music, close-up of hands on keys, shallow depth of field,
+    warm amber lighting, slow zoom out, painterly grain"
+
+WAN / VAN prompts:
+  • Be grounded and descriptive: "Realistic close-up of hands typing on keyboard…"
+  • Documentary style: observe-don't-direct
+  • For explicit content: describe clearly and specifically without ambiguity
+  • Attach reference images for visual consistency
+  • Example: "Documentary close-up of a founder signing a term sheet on a walnut
+    desk, natural window light, handheld slight shake, 24fps, muted color grade"
