@@ -300,7 +300,7 @@ const emptyForm: SetupForm = {
   timeLimit: '',
   platforms: ['Kling', 'Seedance'],
   referenceMap: {
-    people: 'Lead -> @lead_ref_01',
+    people: '',
     props: '',
     locations: '',
     soulIds: '',
@@ -1115,22 +1115,7 @@ export default function App() {
       <aside className="sidebar" aria-label="Sidebar navigation">
         {/* Workspace selector / header */}
         <div className="sidebar-workspace-header">
-          <button className="workspace-selector-btn" onClick={() => navigateTo('dashboard')} type="button">
-            <Icon name="clapperboard" className="clapr-logo-icon" />
-            <span className="workspace-name">Clapr</span>
-            <Icon name="chevronDown" className="dropdown-caret" />
-          </button>
-          <div className="workspace-header-actions">
-            <button className="icon-btn" title="Search" onClick={() => showSidebarNotice('Search is ready in the project index.')} type="button">
-              <Icon name="search" />
-            </button>
-            <button className="icon-btn" title="New Project" onClick={() => {
-              setForm(emptyForm);
-              navigateTo('create');
-            }}>
-              <Icon name="edit" />
-            </button>
-          </div>
+          <span className="workspace-name">Clapr</span>
         </div>
         {sidebarNotice ? <div className="sidebar-notice">{sidebarNotice}</div> : null}
 
@@ -1208,6 +1193,9 @@ export default function App() {
             onDelete={deleteProject}
             onNew={() => {
               setForm(emptyForm);
+              setBeats([]);
+              setScenes([]);
+              setShots([]);
               navigateTo('create');
             }}
             onOpen={openProject}
@@ -1627,31 +1615,6 @@ function Setup({
                 {platform}
                 {platform === 'Kling' ? <small>AI suggested</small> : null}
               </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="field span-two">
-          <span>Reference map</span>
-          <div className="reference-map-grid">
-            {referenceCategories.map((category) => (
-              <label key={category.id}>
-                <span>{category.label}</span>
-                <textarea
-                  value={form.referenceMap[category.id]}
-                  onChange={(event) =>
-                    onChange({
-                      ...form,
-                      referenceMap: {
-                        ...form.referenceMap,
-                        [category.id]: event.target.value,
-                      },
-                    })
-                  }
-                  placeholder={category.placeholder}
-                  rows={4}
-                />
-              </label>
             ))}
           </div>
         </div>
@@ -2121,7 +2084,7 @@ Return a JSON object in this exact format:
                                   color: 'var(--text)',
                                   fontSize: '0.75rem',
                                   fontWeight: '600',
-                                  borderRadius: '4px',
+                                  borderRadius: '8px',
                                   padding: '2px 6px',
                                   height: '24px',
                                   width: 'auto',
@@ -2468,7 +2431,7 @@ Return a JSON object in this exact format:
                   />
                 </label>
                 {isRefining && (
-                  <div className="prompt-refine-box" style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'var(--surface-soft)', padding: '10px', borderRadius: '6px', marginBottom: '14px' }}>
+                  <div className="prompt-refine-box" style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'var(--surface-soft)', padding: '10px', borderRadius: '10px', marginBottom: '14px' }}>
                     <input
                       type="text"
                       placeholder="Enter prompt refinement instruction..."

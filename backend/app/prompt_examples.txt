@@ -1,0 +1,430 @@
+═══════════════════════════════════════════════════════════════════════════════
+CLAPR PROMPT EXAMPLES & BEST PRACTICES
+Reference library for LLM-powered shot generation
+═══════════════════════════════════════════════════════════════════════════════
+
+These examples demonstrate production-quality prompts for each video model.
+Use these as templates when writing generation prompts for scenes.
+
+
+═══════════════════════════════════════════════════════════════════════════════
+KLING 3.0 PROMPTS
+═══════════════════════════════════════════════════════════════════════════════
+
+KEY PRINCIPLES:
+  • Write like a Director of Photography, not a photographer
+  • Describe MOTION and TIME explicitly — how things move, not just how they look
+  • Use specific camera terminology: dolly, push, track, crane, tilt, pan, whip
+  • Include lighting sources and mood
+  • One clear action per shot — don't overload
+  • Use @ref tokens to anchor characters/subjects
+
+────────────────────────────────────────────────────────────────
+KLING EXAMPLE 1: Establishing / Wide Shot
+────────────────────────────────────────────────────────────────
+Scene: Corporate lobby at sunrise
+
+"Wide establishing shot of a modernist corporate lobby at dawn. Floor-to-ceiling
+windows flood the space with golden sunlight. @lead_ref_01 enters from the left
+in a sharp dark suit, walking purposefully toward the reception desk. The camera
+slowly pushes in as he approaches, shallow depth of field blurring the elegant
+seating area behind. Soft warm light plays across glass surfaces. Shot on 35mm
+with minimal color grading, cool morning blue tones transitioning to warm amber."
+
+────────────────────────────────────────────────────────────────
+KLING EXAMPLE 2: Close-Up with Dialogue / Emotion
+────────────────────────────────────────────────────────────────
+Scene: High-pressure moment
+
+"Extreme close-up of @lead_ref_01's face in shadow, eyes locked on something
+off-camera. A moment of hesitation, then determination. Subtle head tilt, slight
+jaw clench. The camera pulls back slowly, revealing he's standing in a rain-soaked
+alley at night. Neon signs reflect in puddles. Cold blue and magenta lighting.
+Film noir aesthetic, grainy 16mm look. One beat of silence, then dialogue begins."
+
+────────────────────────────────────────────────────────────────
+KLING EXAMPLE 3: Action / Complex Motion
+────────────────────────────────────────────────────────────────
+Scene: Chase sequence
+
+"Wide shot, @lead_ref_01 runs down a crowded Tokyo street at midday. Busy foot
+traffic creates dynamic obstacles. The camera tracks left-to-right in a fast
+handheld following shot, weaving between people. Bright daylight, saturated
+colors, crowds in motion blur. Building energy. Cut to: tight profile close-up,
+@lead_ref_01's face breathing hard, eyes forward, neon glow hitting one side.
+Fast pace, documentary-style realism. All handheld, 24fps for slight motion blur."
+
+────────────────────────────────────────────────────────────────
+KLING EXAMPLE 4: Multi-Shot Sequence
+────────────────────────────────────────────────────────────────
+Scene: Product demo sequence (6 shots in one generation)
+
+"Shot 1: Wide overhead view of a walnut desk, pristine white background.
+@product_ref_01 centered, morning light.
+| Shot 2: Medium shot, @lead_ref_01's hands opening the product, slow deliberate
+motion, focus pulls to product detail.
+| Shot 3: Insert close-up, fingers running across brushed metal surface, tactile,
+soft warm light.
+| Shot 4: Medium shot, @lead_ref_01 looking up with slight smile, product held up
+to light, confidence in eyes.
+| Shot 5: Wide, @lead_ref_01 walks to window with product, golden hour light
+floods in, silhouette. Slow dolly out.
+| Shot 6: Tight close-up, product's screen glowing, reflection on @lead_ref_01's
+face. Subtle head nod. End on product detail."
+
+────────────────────────────────────────────────────────────────
+KLING EXAMPLE 5: Cinematic Hero Shot
+────────────────────────────────────────────────────────────────
+Scene: Establishing a character
+
+"Slow dolly push-in on @lead_ref_01's face as sweat beads down his forehead. Eyes
+intensely focused on something beyond the frame. Shallow depth of field, warm
+color grade with high contrast. Soft practical light sources frame the shot.
+Camera moves from wide to extreme close-up of eyes over 8 seconds. Cinematic,
+dramatic, 2.39:1 aspect ratio feel. Film grain. Zero dialogue, pure visual story."
+
+
+═══════════════════════════════════════════════════════════════════════════════
+SEEDANCE 2.0 PROMPTS
+═══════════════════════════════════════════════════════════════════════════════
+
+KEY PRINCIPLES:
+  • Audio is FIRST — describe sound source, rhythm, and how it anchors the scene
+  • One clear action per shot — break complex ideas across multiple shots
+  • Use @Audio @Video @Image reference tags in your prompt IF using them
+  • Keep sentences SHORT (5–10 words per line max)
+  • Include FEELING and MOOD over technical detail
+  • Duration MUST be: 4, 5, 6, 8, 10, 12, or 15 seconds only
+  • Describe surface and material for Foley (wet cobblestone vs. hardwood)
+
+────────────────────────────────────────────────────────────────
+SEEDANCE EXAMPLE 1: Audio-First / Emotional Close-Up
+────────────────────────────────────────────────────────────────
+Scene: Intimate moment with piano (8 seconds)
+
+"Soft piano music, slow contemplative.
+Close-up of hands on black keys.
+Shallow depth of field, warm amber lighting.
+Fingers move gently, each note deliberate.
+Camera pulls back slowly over the shoulders to reveal
+@lead_ref_01 at the piano, expression focused but dreamy.
+Painterly texture, film grain, muted warm color palette.
+Emotional, introspective, jazz club aesthetic."
+
+────────────────────────────────────────────────────────────────
+SEEDANCE EXAMPLE 2: Sound Design / Ambient Atmosphere
+────────────────────────────────────────────────────────────────
+Scene: Rain on glass, contemplative mood (6 seconds)
+
+"Sound of heavy rain pattering on glass.
+Soft ambient synth in background, melancholic.
+Macro shot of raindrops sliding down a window.
+Blurred lights outside create bokeh.
+Warm interior light, cool blue tone from rain-soaked outside.
+Camera slowly zooms in on one droplet falling.
+Dreamy, slow-motion feeling, painterly grain.
+Quiet, introspective mood."
+
+────────────────────────────────────────────────────────────────
+SEEDANCE EXAMPLE 3: Stylized Character Performance
+────────────────────────────────────────────────────────────────
+Scene: Emotional monologue with music (10 seconds)
+
+"Cinematic orchestral swell building slowly.
+Medium close-up of @lead_ref_01, eyes glistening.
+Soft directional key light from side, dramatic shadows.
+Character delivers emotion through expression, minimal head movement.
+Depth of field blurs abstract background.
+Color grading: cool tones with warm face lighting.
+Camera slight push-in, building intensity with music.
+End on tight close-up of eyes. Powerful, cinematic, artistic."
+
+────────────────────────────────────────────────────────────────
+SEEDANCE EXAMPLE 4: Multi-Shot with Audio Sync
+────────────────────────────────────────────────────────────────
+Scene: Stylized narrative sequence (15 seconds)
+
+"Upbeat indie song, energetic, playful rhythm.
+Shot 1 (4s): @lead_ref_01 laughing, twirling in sunlit room. Warm golden light.
+Cut to Shot 2 (4s): Hands snapping, synchronizing with bass drop. Macro close-up.
+Cut to Shot 3 (4s): Wide shot, @lead_ref_01 dancing freely, silhouette against
+window, blue-hour light, joy in every motion.
+Cut to Shot 4 (3s): Return to close-up, beaming smile, eye contact with camera.
+Music peaks. Celebration mood, stylized, dreamy cinematography, soft-focus edges."
+
+────────────────────────────────────────────────────────────────
+SEEDANCE EXAMPLE 5: Atmospheric Product Moment
+────────────────────────────────────────────────────────────────
+Scene: Product reveal with ambient sound (6 seconds)
+
+"Gentle ambient droning sound, serene and minimal.
+Hands gently unboxing @product_ref_01, reverent, slow motion.
+Soft warm light hits product's brushed surface.
+Close-up of fingers tracing edges.
+Camera pulls back to reveal product glowing softly on wood surface.
+Shallow bokeh, muted color palette, luxury feeling.
+Peace and calm, tactile, premium aesthetic."
+
+
+═══════════════════════════════════════════════════════════════════════════════
+WAN / VAN 2.7 PROMPTS
+═══════════════════════════════════════════════════════════════════════════════
+
+KEY PRINCIPLES:
+  • Write as a documentary director — OBSERVE, don't direct
+  • Ground everything in REALISM and specificity
+  • Describe surfaces, materials, light SOURCE clearly
+  • Include concrete sensory details: textures, colors, lighting conditions
+  • For explicit content: describe clearly without ambiguity
+  • Use camera anchors (reference images) for consistency
+  • One sequence per prompt — clear beginning, middle, end
+
+────────────────────────────────────────────────────────────────
+WAN EXAMPLE 1: Corporate / Documentary
+────────────────────────────────────────────────────────────────
+Scene: Product presentation (8 seconds)
+
+"Documentary-style wide shot of a bright modern office. @lead_ref_01 in business
+casual stands at a glass table, holding @product_ref_01. Natural window light
+illuminates the left side of his face. He demonstrates the product with calm
+confidence, turning it slowly to show details. The camera holds wide, then gentle
+push to medium. Realistic color grade, natural skin tones, sharp focus on product
+details. Shot on 24fps, stable tripod. Professional, credible, trustworthy."
+
+────────────────────────────────────────────────────────────────
+WAN EXAMPLE 2: Cinematic Realism / Everyday Drama
+────────────────────────────────────────────────────────────────
+Scene: Founder signing moment (6 seconds)
+
+"Tight close-up of @lead_ref_01's hands as they sign a document on a walnut desk.
+Fountain pen moving across paper with deliberate strokes. The signature is clear
+and confident. Natural window light from above creates sharp shadows across the
+desk surface. Coffee mug blurred in background, real office setting. Camera is
+static, handheld slight micro-movements. Warm earth tones, photorealistic detail,
+subtle dust particles in light. Tension and resolution. Shot on 35mm aesthetic."
+
+────────────────────────────────────────────────────────────────
+WAN EXAMPLE 3: Interview Setup
+────────────────────────────────────────────────────────────────
+Scene: One-on-one conversation (10 seconds)
+
+"Medium shot of @lead_ref_01 sitting in a comfortable chair, against a neutral
+soft-focus background wall. Professional three-point lighting: key light from
+upper left, soft fill from right, subtle hair light. Natural color palette,
+professional broadcast quality. @lead_ref_01 begins to speak, calm and poised,
+occasionally gesturing. Light catches texture of fabric. Natural skin tones,
+sharp on eyes. No movement — locked static frame. Documentary interview style,
+credible and authentic."
+
+────────────────────────────────────────────────────────────────
+WAN EXAMPLE 4: Architectural / Location Showcase
+────────────────────────────────────────────────────────────────
+Scene: Office walkthrough (12 seconds)
+
+"Wide shot of a minimalist office space with floor-to-ceiling windows overlooking
+a city skyline. Morning light floods in. @lead_ref_01 walks across the space,
+hand trailing along a polished wooden counter. The camera tracks smoothly from
+left to right, revealing desks, plants, and natural materials. Warm light plays
+on surfaces. Color-graded with lifted blacks and warm whites. Architectural
+detail is clear: wood grain, glass reflections, concrete floors. Calm, aspirational,
+realistic. Shot on Arri cinema camera aesthetic."
+
+────────────────────────────────────────────────────────────────
+WAN EXAMPLE 5: Explicit/NSFW Content
+────────────────────────────────────────────────────────────────
+Scene: Adult scenario (description intentionally clear and specific)
+
+"Close-up shot of two adults in an intimate moment. Clear focus on bodies in
+contact, specific sexual activity visible and unambiguous. Natural indoor light
+from bedside lamp, warm amber tones. Realistic skin texture and anatomical detail.
+Heavy breathing and soft sound design. Camera is close and steady. Cinematic but
+explicit. [Model: Van/WAN] is appropriate for this content; Kling or Seedance
+would be censored."
+
+
+═══════════════════════════════════════════════════════════════════════════════
+SOUL CINEMA PROMPTS (Image Generation for Characters)
+═══════════════════════════════════════════════════════════════════════════════
+
+KEY PRINCIPLES:
+  • Keep prompts under 100 words for best consistency
+  • Use format: Age + Role/Profession + Physical details + Mood + Environment
+  • Include distinctive marks: scars, tattoos, glasses, hairstyle
+  • Specify pose or stance for cinematic quality
+  • Lighting is crucial: "dramatic side light", "soft fill light", "neon glow"
+  • End with cinematic style descriptor
+  • Generate 3 variations and select strongest for Soul ID
+
+────────────────────────────────────────────────────────────────
+SOUL CINEMA EXAMPLE 1: Professional Character
+────────────────────────────────────────────────────────────────
+
+"28-year-old female tech founder. Sharp cheekbones, confident expression.
+Dark hair pulled back sleekly. Wearing minimalist black turtleneck. Seated
+at a modern glass desk. Key light from upper left creates strong shadows,
+professional boardroom aesthetic. Shallow depth of field, blurred office
+background. Cinematic photoreal, dramatic lighting, intense expression.
+Corporate power aesthetic."
+
+────────────────────────────────────────────────────────────────
+SOUL CINEMA EXAMPLE 2: Character with Distinctive Style
+────────────────────────────────────────────────────────────────
+
+"Soul: 28yo athletic Latina hacker. Sharp cheekbones, neon tattoos on left
+shoulder, short purple hair, confident smirk. Wearing leather jacket over
+cyberpunk-style tech wear. Standing in neon-lit data center, holographic
+light playing across face. Cyberpunk cinematic, hacking terminal glow,
+intense and cool. Photorealistic but stylized. Character consistency set."
+
+────────────────────────────────────────────────────────────────
+SOUL CINEMA EXAMPLE 3: Everyday Character
+────────────────────────────────────────────────────────────────
+
+"35-year-old male coffee shop owner. Warm brown eyes, salt-and-pepper beard,
+genuine smile. Wearing apron, holding espresso cup. Standing behind wooden
+counter. Warm golden hour light from cafe window, soft fill light on face.
+Comfortable, approachable mood. Cinematic photoreal, natural lighting,
+friendly warmth. Documentary-style authenticity. Shot on portrait lens
+aesthetic."
+
+────────────────────────────────────────────────────────────────
+SOUL CINEMA EXAMPLE 4: Dramatic Character
+────────────────────────────────────────────────────────────────
+
+"Young adult male, ethereal face, pale complexion, piercing blue eyes.
+Long dark hair. Wearing dark fantasy costume with ornate details. Standing
+in fog-filled forest at twilight. Dramatic side light, cool color palette
+with amber accent light. Moody, introspective, otherworldly. Fantasy
+cinematic, high-end production value. Dramatic lighting. Character for
+fantasy narrative."
+
+────────────────────────────────────────────────────────────────
+SOUL CINEMA EXAMPLE 5: Diverse / Inclusive Character
+────────────────────────────────────────────────────────────────
+
+"45-year-old South Asian woman, warm smile, intelligent eyes, salt-and-pepper
+hair in braid. Wearing sage green professional dress. Seated in leather chair.
+Soft natural light from window, professional studio lighting. Confident and
+approachable. Cinematic photoreal, premium portrait aesthetic, warm skin tone
+accuracy. Leadership presence. Ready for corporate video or testimonial."
+
+
+═══════════════════════════════════════════════════════════════════════════════
+GOOGLE GEMINI PRO PROMPTS (Image Generation for Locations & Props)
+═══════════════════════════════════════════════════════════════════════════════
+
+KEY PRINCIPLES:
+  • Focus on ENVIRONMENT and CONTEXT, not characters
+  • Be specific: materials, surfaces, lighting sources, spatial relationships
+  • Describe SCALE and PROPORTION clearly
+  • Use architectural and design language
+  • Include lighting direction and color temperature
+  • Specify depth: foreground, midground, background layers
+  • Keep it PHOTOREALISTIC unless stylization needed
+
+────────────────────────────────────────────────────────────────
+GEMINI EXAMPLE 1: Corporate Location
+────────────────────────────────────────────────────────────────
+
+"Modernist corporate lobby at dawn. Floor-to-ceiling windows with soft golden
+sunlight streaming in. Polished concrete floors reflecting light. Minimalist
+furniture: sleek reception desk in walnut wood, contemporary seating in neutral
+linen. Potted fiddle leaf figs add subtle green. Architectural detail: steel
+columns, exposed ceiling grid, skylights. Cool morning light from outside
+contrasts with warm interior spots. Photorealistic, sharp focus, premium
+aesthetics. Photography style: architectural documentary."
+
+────────────────────────────────────────────────────────────────
+GEMINI EXAMPLE 2: Detailed Prop / Product Environment
+────────────────────────────────────────────────────────────────
+
+"Close-up product photography setup. Brushed stainless steel device mounted on
+a white seamless backdrop. Soft box lighting from upper left creates smooth
+highlights on curved surfaces. Shadow detail on right side. Shallow depth of
+field. Wooden platform beneath product, natural grain texture visible.
+Overhead view. Studio photography, museum quality lighting, commercial
+product photography style. Sharp on product, soft background blur."
+
+────────────────────────────────────────────────────────────────
+GEMINI EXAMPLE 3: Location with Atmosphere
+────────────────────────────────────────────────────────────────
+
+"Rain-soaked Tokyo alley at night. Narrow street, old buildings on both sides
+with weathered facades. Neon Japanese signs flicker above: red, pink, cyan
+neons reflecting on wet pavement. Power lines crisscross overhead. Puddles
+mirror the neon light. Depth: narrow foreground, street receding into darkness.
+Atmospheric moisture visible in light beams. Cinematic photography, moody,
+cyberpunk aesthetic. Shot on 35mm film simulation."
+
+────────────────────────────────────────────────────────────────
+GEMINI EXAMPLE 4: Architectural Interior
+────────────────────────────────────────────────────────────────
+
+"Isometric 3D scene of a luxury home office. Desktop with monitor, keyboard,
+coffee mug, journal. Bookshelf on left wall with organized volumes. Floor-to-
+ceiling window on right with city skyline view. Soft desk lamp creates warm
+overhead light. Wood flooring, warm paint color (sage green), professional
+plants in ceramic pots. Mid-tone neutral palette, refined textures. Soft
+shadows, depth layers clear. Architectural rendering, premium home design
+aesthetic. Clean, organized, sophisticated."
+
+────────────────────────────────────────────────────────────────
+GEMINI EXAMPLE 5: Complex Multi-Element Scene
+────────────────────────────────────────────────────────────────
+
+"Overhead flat-lay composition of a designer's desk. Center: open leather
+notebook with hand-written notes and sketch. Surrounding items arranged with
+intention: pencils in ceramic holder (right), coffee cup (left), small plant,
+glass of water, designer watch, reading glasses. Desk surface: natural wood
+with visible grain, warm honey tone. Soft directional light from upper left
+creates subtle shadows. Each object in sharp focus, arranged compositionally.
+Still-life photography, flatlay, creative workspace, professional product
+styling."
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PROMPT WRITING CHECKLIST
+═══════════════════════════════════════════════════════════════════════════════
+
+FOR ALL MODELS:
+  ☐ One clear PRIMARY action or subject
+  ☐ Lighting SOURCE is named (window, lamp, neon, etc.)
+  ☐ Camera MOVEMENT or ANGLE specified (if any)
+  ☐ MOOD or ATMOSPHERE is clear
+  ☐ Time of day (if relevant): dawn, noon, golden hour, night, etc.
+  ☐ Color palette or tone is described
+
+FOR KLING:
+  ☐ Shot size clearly named (Wide, Medium, Close-Up, Insert)
+  ☐ Motion verb is CINEMATIC (dolly, push, track, crane, not just "zoom")
+  ☐ @ref tokens used for character/subject anchoring
+  ☐ Aspect ratio or film format mentioned (optional but useful)
+  ☐ Negative aspects avoided: "no text overlays", "natural motion", etc.
+
+FOR SEEDANCE:
+  ☐ AUDIO described first (sound source, mood, music)
+  ☐ Duration snapped to valid value (4/5/6/8/10/12/15 only)
+  ☐ Sentences kept SHORT (max 10 words per line)
+  ☐ EMOTION and FEELING emphasized over technical detail
+  ☐ Surface materials named for Foley (wet cobblestone, hardwood, glass)
+
+FOR WAN/VAN:
+  ☐ DOCUMENTARY tone — observe, don't direct
+  ☐ Specific MATERIALS and TEXTURES described
+  ☐ Light SOURCE detailed (natural window, lamp type, time of day)
+  ☐ REALISTIC proportions and spatial relationship
+  ☐ (If explicit) Content described clearly and specifically
+
+FOR SOUL CINEMA:
+  ☐ Under 100 words total
+  ☐ Age + Role/Profession + Distinctive features
+  ☐ Mood or expression included
+  ☐ LIGHTING style explicitly named
+  ☐ Final style descriptor: "Cinematic photoreal", "Fantasy aesthetic", etc.
+
+FOR GEMINI PRO:
+  ☐ LOCATION or ENVIRONMENT focus (not character face)
+  ☐ Spatial layers clear: foreground, midground, background
+  ☐ MATERIALS and SURFACES described (wood grain, concrete, glass)
+  ☐ Scale and PROPORTION are specific
+  ☐ Lighting direction FROM source to surface

@@ -1,0 +1,149 @@
+================================================================================
+CLAPR LLM WORKFLOWS AND DATA FLOWS
+================================================================================
+This file outlines what inputs are sent to the LLM, how the system processes them, 
+and what the expected outputs are. You can edit this file to plan modifications.
+
+--------------------------------------------------------------------------------
+1. SCRIPT BREAKDOWN / PARSING (parseScript)
+--------------------------------------------------------------------------------
+Triggered when: User creates a new project and parses the script/summary.
+Endpoint: POST /api/script/parse
+
+[INPUTS SENT TO LLM]
+* Script Content: Raw film script, summary, or sequence of actions.
+* Project Name: Optional user-provided title for the project.
+* Time Limit: Optional target video duration (e.g. "60s", "2m").
+* Preferred Platforms/Models: e.g. "Kling, Seedance, Van".
+* Reference Map: Reference tokens (e.g. "@lead_ref_01: Lead character description").
+* Director Notes: Extra notes for pacing, styles, and visuals.
+
+[PROCESSING ON SERVER]
+1. Loads rules from 'backend/app/services/model_guidelines.txt' (contains Kling,
+   Seedance, Van, Gemini Pro, and Soul Cinema criteria).
+2. Loads examples from 'backend/app/prompt_examples.txt' (contains cinematic
+   prompting templates and structures).
+3. Constructs a system prompt enforcing a strict JSON output schema and injecting
+   both guidelines and examples.
+4. Executes an OpenAI Chat Completion (gpt-4o-mini) request requesting JSON output.
+5. Snaps/clips durations based on model-specific constraints (e.g. Seedance 4s, 5s,
+   6s, 8s, 10s, 12s, 15s; Kling/Van up to 15s).
+
+[OUTPUTS FROM LLM]
+A JSON object matching the following structure:
+{
+  "beats": [
+    {
+      "id": 1,
+      "title": "Introduction to protagonist",
+      "frame": "A medium shot of a man looking out a rainy window",
+      "mood": "Melancholy, reflective",
+      "duration": "8s"
+    }
+  ],
+  "scenes": [
+    {
+      "id": 1,
+      "title": "INT. APARTMENT - DAY",
+      "location": "Cozy studio apartment",
+      "time": "Day",
+      "description": "Rain patters on the glass as soft light spills inside",
+      "shots": 2,
+      "duration": "12s"
+    }
+  ],
+  "shots": [
+    {
+      "id": 1,
+      "scene": "INT. APARTMENT - DAY",
+      "size": "Medium Close-Up",
+      "motion": "Slow push in",
+      "duration": "8s",
+      "model": "Seedance",
+      "refs": "@lead_ref_01",
+      "firstFrame": "Close-up profile of the lead character",
+      "prompt": "Cinematic medium close-up of @lead_ref_01 staring out a rain-streaked window. Soft dim indoor lighting, reflections, slow push-in movement. Seedance style.",
+      "status": "todo",
+      "note": ""
+    }
+  ]
+}
+
+
+--------------------------------------------------------------------------------
+2. REFERENCE IMAGE PROMPT REFINEMENT (refinePrompt)
+--------------------------------------------------------------------------------
+Triggered when: User refines a reference prompt in the Reference Map card (Setup stage).
+Endpoint: POST /api/chat
+
+[INPUTS SENT TO LLM]
+* Current Prompt: Existing text prompt describing the reference subject.
+* Subject Category: "people", "props", or "locations".
+* Refinement Request: User-typed instruction (e.g. "make it look cyberpunk").
+
+[PROCESSING ON SERVER]
+1. Loads model guidelines from 'backend/app/services/model_guidelines.txt'.
+2. Formulates a system prompt demanding output ONLY in valid JSON.
+3. Queries OpenAI to rewrite the prompt and recommend either "Google Gemini Pro" 
+   (for locations/props) or "Soul Cinema" (for people/portraits) based on guidelines.
+
+[OUTPUTS FROM LLM]
+A JSON object of the form:
+{
+  "model": "Google Gemini Pro" | "Soul Cinema",
+  "prompt": "refined prompt text here"
+}
+
+
+--------------------------------------------------------------------------------
+3. SHOT REGENERATION (handleRegenerate)
+--------------------------------------------------------------------------------
+Triggered when: User clicks "Regen Prompt" for a specific shot in the workspace.
+Endpoint: POST /api/chat
+
+[INPUTS SENT TO LLM]
+* Shot Metadata:
+  - Scene Name
+  - Shot Size (e.g., Close-Up, Wide, Tracking)
+  - Camera Motion (e.g., Static, Dolly in, Pan)
+  - Duration (e.g., "6s")
+  - Refs (e.g., "@lead_ref_01")
+  - First Frame description
+
+[PROCESSING ON SERVER]
+1. Appends model guidelines from 'backend/app/services/model_guidelines.txt'.
+2. Queries the LLM to choose the best video model (Kling, Seedance, or Van) 
+   and rewrite a brand-new production prompt matching the shot details.
+
+[OUTPUTS FROM LLM]
+A JSON object of the form:
+{
+  "model": "Kling" | "Seedance" | "Van",
+  "prompt": "regenerated production prompt text here"
+}
+
+
+--------------------------------------------------------------------------------
+4. SHOT PROMPT REFINEMENT (handleRefine)
+--------------------------------------------------------------------------------
+Triggered when: User enters an instruction and clicks Refine inside the shot editor.
+Endpoint: POST /api/chat
+
+[INPUTS SENT TO LLM]
+* Current Prompt: The existing prompt text.
+* Current Model: The currently selected video model (Kling, Seedance, or Van).
+* Refinement Instruction: e.g. "add slow-motion dramatic rain and change mood to dark".
+
+[PROCESSING ON SERVER]
+1. Appends model guidelines from 'backend/app/services/model_guidelines.txt'.
+2. System prompt requests the LLM to rewrite the prompt according to the new 
+   instruction, and re-evaluate if the video generation model needs to change 
+   (e.g., switching to Seedance for slow-motion drama).
+
+[OUTPUTS FROM LLM]
+A JSON object of the form:
+{
+  "model": "Kling" | "Seedance" | "Van",
+  "prompt": "refined production prompt text here"
+}
+================================================================================

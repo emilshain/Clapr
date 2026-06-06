@@ -4,9 +4,28 @@ import os
 from app.schemas.script import Beat, Scene, ScriptParseRequest, ScriptParseResponse, Shot
 from app.services.chat import _build_client, _load_model_guidelines
 
+
+def _load_prompt_examples() -> str:
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    possible_paths = [
+        os.path.join(current_dir, "prompt_examples.txt"),
+        os.path.join(current_dir, "..", "prompt_examples.txt"),
+        os.path.join(current_dir, "..", "..", "prompt_examples.txt"),
+        "prompt_examples.txt",
+    ]
+    for path in possible_paths:
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    return f.read().strip()
+            except Exception:
+                pass
+    return ""
+
 _SYSTEM_PROMPT = """You are a professional cinematic AI director and shot designer for Clapr, an AI video production platform.
 
 Your task: analyze the provided script and break it down into a complete production plan.
+Generate PRODUCTION-QUALITY prompts for each shot that follow the best practices and examples below.
 Return your response as a single valid JSON object — nothing else.
 
 OUTPUT SCHEMA:
@@ -64,6 +83,8 @@ SHOTS: All shots needed to tell the story. Typical productions have 8–20 shots
   - Use @ref tokens from the reference map for people/props/locations when relevant.
 
 {guidelines_block}
+
+{examples_block}
 """
 
 _SEEDANCE_DURATIONS = [4, 5, 6, 8, 10, 12, 15]
@@ -102,7 +123,15 @@ def parse_script(request: ScriptParseRequest) -> ScriptParseResponse:
     guidelines_block = (
         f"[MODEL SELECTION GUIDELINES]\n{guidelines}" if guidelines else ""
     )
-    system_prompt = _SYSTEM_PROMPT.format(guidelines_block=guidelines_block)
+
+    examples = _load_prompt_examples()
+    examples_block = (
+        f"[PROMPT EXAMPLES & BEST PRACTICES]\n{examples}" if examples else ""
+    )
+
+    system_prompt = _SYSTEM_PROMPT.format(
+        guidelines_block=guidelines_block, examples_block=examples_block
+    )
 
     ref_summary = "\n".join(
         f"  {k}: {v}" for k, v in request.reference_map.items() if v.strip()

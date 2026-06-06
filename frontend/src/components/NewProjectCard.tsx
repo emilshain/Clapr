@@ -17,7 +17,7 @@ export default function NewProjectCard({
   const [draft, setDraft] = useState<NewProjectDraft>({
     projectName: '',
     script: '',
-    references: '@lead_ref_01',
+    references: '',
     notes: '',
   });
 

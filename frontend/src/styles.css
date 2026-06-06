@@ -88,7 +88,7 @@ button {
   flex-direction: column;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
 }
 
@@ -146,7 +146,7 @@ button {
   align-items: center;
   padding: 6px;
   border: 1px solid var(--border-strong);
-  border-radius: 10px;
+  border-radius: 14px;
   background: var(--surface-soft);
 }
 
@@ -161,7 +161,7 @@ button {
   min-width: 0;
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 10px;
   background: var(--field);
   color: var(--text);
   padding: 9px 10px;
@@ -245,7 +245,7 @@ h4 {
   gap: 12px;
   padding: 10px 12px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 12px;
   color: var(--muted-strong);
   background: transparent;
   text-align: left;
@@ -343,7 +343,7 @@ h4 {
   font-weight: 600;
   font-size: 0.95rem;
   padding: 4px 6px;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s ease;
 }
@@ -377,7 +377,7 @@ h4 {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -405,7 +405,7 @@ h4 {
   font-size: 0.88rem;
   font-weight: 500;
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
   text-align: left;
   transition: all 0.15s ease;
@@ -465,7 +465,7 @@ h4 {
   margin: -10px 8px 0;
   padding: 8px 10px;
   border: 1px solid var(--border);
-  border-radius: 7px;
+  border-radius: 11px;
   color: var(--muted-strong);
   background: var(--surface-soft);
   font-size: 0.78rem;
@@ -488,7 +488,7 @@ h4 {
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -515,7 +515,7 @@ h4 {
   align-items: center;
   gap: 2px;
   padding: 0 6px 0 12px;
-  border-radius: 6px;
+  border-radius: 10px;
   color: var(--muted-strong);
   transition: background 0.12s ease, color 0.12s ease;
 }
@@ -557,7 +557,7 @@ h4 {
   gap: 8px;
   padding: 6px 10px 6px 12px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 10px;
   background: transparent;
   color: var(--muted-strong);
   text-align: left;
@@ -600,7 +600,7 @@ h4 {
   gap: 2px;
   padding: 0 6px;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 10px;
   color: var(--muted-strong);
   transition: background 0.12s ease, color 0.12s ease, opacity 0.12s ease;
 }
@@ -658,7 +658,7 @@ h4 {
   align-items: center;
   justify-content: center;
   padding: 0;
-  border-radius: 5px;
+  border-radius: 9px;
   opacity: 0;
   transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease;
 }
@@ -709,7 +709,7 @@ h4 {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--border-strong);
-  border-radius: 4px;
+  border-radius: 8px;
   background: var(--surface-soft);
 }
 
@@ -790,7 +790,7 @@ button.is-complete:hover,
   width: 100%;
   min-height: 38px;
   border: 1px solid var(--border);
-  border-radius: 7px;
+  border-radius: 11px;
   background: var(--surface-soft);
   color: var(--muted-strong);
   text-align: left;
@@ -836,7 +836,7 @@ button.is-complete:hover,
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid transparent;
   padding: 0 16px;
   font-weight: 800;
@@ -882,7 +882,7 @@ button.is-complete:hover,
   justify-content: center;
   gap: 8px;
   border: 1px solid var(--border-strong);
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 0;
   color: var(--muted-strong);
   background: var(--surface-strong);
@@ -1011,7 +1011,7 @@ button.is-complete:hover,
   align-items: center;
   padding: 8px 10px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface-soft);
   font-size: 0.86rem;
   font-weight: 700;
@@ -1022,7 +1022,7 @@ button.is-complete:hover,
   gap: 10px;
   padding: 10px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface-soft);
 }
 
@@ -1058,7 +1058,7 @@ button.is-complete:hover,
 .compact-action {
   min-height: 30px;
   padding: 0 10px;
-  border-radius: 6px;
+  border-radius: 10px;
   font-size: 0.78rem;
 }
 
@@ -1066,7 +1066,7 @@ button.is-complete:hover,
   margin: 0;
   padding: 18px;
   border: 1px dashed var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface-soft);
 }
 
@@ -1086,7 +1086,7 @@ button.is-complete:hover,
 
 .project-page-layout {
   display: grid;
-  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  grid-template-columns: 1fr;
   gap: 16px;
   align-items: start;
 }
@@ -1100,7 +1100,7 @@ button.is-complete:hover,
 .shot-detail,
 .editor-row {
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface-soft);
   box-shadow: none;
 }
@@ -1189,7 +1189,7 @@ button.is-complete:hover,
 
 .timeline-strip span {
   height: 10px;
-  border-radius: 3px;
+  border-radius: 7px;
   background: #26323d;
 }
 
@@ -1221,7 +1221,7 @@ select,
 textarea {
   width: 100%;
   border: 1px solid var(--border-strong);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--field);
   color: var(--text);
   outline: none;
@@ -1264,7 +1264,7 @@ textarea:focus {
   align-items: center;
   gap: 8px;
   border: 1px solid var(--border-strong);
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 0 12px;
   color: var(--muted-strong);
   background: var(--surface-strong);
@@ -1339,7 +1339,7 @@ textarea:focus {
 
 .scene-page-layout {
   display: grid;
-  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
   gap: 16px;
   align-items: start;
 }
@@ -1347,29 +1347,31 @@ textarea:focus {
 .scene-reference-card,
 .scene-shot-section {
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface-soft);
   box-shadow: none;
 }
 
 .scene-reference-card {
-  position: sticky;
-  top: 92px;
+  position: static;
   display: grid;
-  gap: 12px;
-  padding: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 16px;
+  align-items: start;
 }
 
 .reference-mini-section {
   display: grid;
   gap: 8px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
+  padding-left: 20px;
+  border-left: 1px solid var(--border);
 }
 
 .scene-shot-sections {
   display: grid;
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+  gap: 16px;
 }
 
 .scene-shot-section {
@@ -1402,7 +1404,7 @@ textarea:focus {
   align-content: start;
   padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface);
   color: inherit;
   text-align: left;
@@ -1440,7 +1442,7 @@ textarea:focus {
   gap: 12px;
   padding: 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface-soft);
   box-shadow: none;
 }
@@ -1471,7 +1473,7 @@ textarea:focus {
   gap: 8px;
   padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface);
 }
 
@@ -1512,7 +1514,7 @@ textarea:focus {
   gap: 12px;
   padding: 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface-soft);
   box-shadow: none;
 }
@@ -1534,7 +1536,7 @@ textarea:focus {
   gap: 12px;
   padding: 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface-soft);
   box-shadow: none;
 }
@@ -1550,7 +1552,7 @@ textarea:focus {
   gap: 10px;
   padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface);
 }
 
@@ -1564,7 +1566,7 @@ textarea:focus {
 .multishot-card .multishot-anchor {
   padding: 10px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface-soft);
   color: var(--ink);
   font-size: 0.86rem;
@@ -1580,7 +1582,7 @@ textarea:focus {
   gap: 10px;
   padding: 0;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: transparent;
 }
 
@@ -1609,7 +1611,7 @@ textarea:focus {
   gap: 10px;
   padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface);
 }
 
@@ -1629,7 +1631,7 @@ textarea:focus {
   border: 1px solid var(--border-strong);
   font-family: var(--font-mono);
   resize: vertical;
-  border-radius: 6px;
+  border-radius: 10px;
   width: 100%;
   min-height: 80px;
   padding: 8px 10px;
@@ -1692,7 +1694,7 @@ textarea:focus {
   gap: 10px;
   padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface-soft);
 }
 
@@ -1748,7 +1750,7 @@ textarea:focus {
   align-items: center;
   padding: 0 10px;
   border: 1px solid var(--border-strong);
-  border-radius: 7px;
+  border-radius: 11px;
   background: var(--field);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1782,7 +1784,7 @@ textarea:focus {
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 5px;
+  border-radius: 9px;
   color: var(--muted);
   background: transparent;
 }
@@ -1812,7 +1814,7 @@ textarea:focus {
   padding: 0 12px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 10px;
   transition: all 0.15s ease;
 }
 
@@ -1867,7 +1869,7 @@ textarea:focus {
   margin: 0;
   padding: 18px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: #06090d;
   color: #dce8ef;
   font-size: 0.86rem;
@@ -1906,6 +1908,14 @@ textarea:focus {
 
   .scene-reference-card {
     position: static;
+    grid-template-columns: 1fr;
+  }
+
+  .reference-mini-section {
+    padding-left: 0;
+    padding-top: 10px;
+    border-left: 0;
+    border-top: 1px solid var(--border);
   }
 
   .project-progress {
@@ -2005,7 +2015,7 @@ textarea:focus {
   height: 24px;
   padding: 4px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 10px;
   color: var(--muted-strong);
   background: var(--surface-soft);
   text-align: center;
@@ -2030,7 +2040,7 @@ textarea:focus {
 .activity-model-badge {
   display: inline-block;
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: 8px;
   background: var(--surface-strong);
   color: var(--text);
   font-size: 0.75rem;
@@ -2045,7 +2055,7 @@ textarea:focus {
   padding: 8px 12px;
   background: var(--field);
   border: 1px solid var(--border-strong);
-  border-radius: 8px;
+  border-radius: 12px;
   transition: all 0.15s ease;
 }
 
@@ -2111,7 +2121,7 @@ textarea:focus {
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2131,7 +2141,7 @@ textarea:focus {
 .meta-action-btn {
   width: 100%;
   height: 32px;
-  border-radius: 6px;
+  border-radius: 10px;
   font-size: 0.82rem;
   font-weight: 600;
   border: 1px solid var(--border);
