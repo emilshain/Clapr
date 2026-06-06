@@ -27,15 +27,7 @@ export default function NewProjectCard({
   }
 
   return (
-    <form className="project-card new-project-card" onSubmit={handleSubmit}>
-      <div className="card-topline">
-        <span>New project</span>
-        <span>Card UI</span>
-      </div>
-
-      <h3>Create a project</h3>
-      <p>Enter the minimum project details here, then continue into setup.</p>
-
+    <form className="new-project-form" onSubmit={handleSubmit}>
       <div className="form-grid compact">
         <label>
           <span>Project name</span>
