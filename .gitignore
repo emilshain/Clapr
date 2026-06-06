@@ -1,0 +1,13 @@
+.venv/
+backend/.venv/
+backend/__pycache__/
+backend/**/*.pyc
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+.env
+*.env
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+__pycache__/
