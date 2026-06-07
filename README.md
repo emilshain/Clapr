@@ -32,7 +32,9 @@ Clapr separates planning from rendering. It analyzes a script to structure beats
 Add your demo or pitch video link here.
 
 ## Screenshots
-Add screenshots of your project here.
+![Storyboard and Beats Analysis](screenshots/screenshot_storyboard.png)
+![Reference Image Map Planner](screenshots/screenshot_reference_map.png)
+![Shots Editor and Model Prompt Builder](screenshots/screenshot_shots_editor.png)
 
 ## How to Run Locally
 
