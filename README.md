@@ -29,12 +29,10 @@ Clapr separates planning from rendering. It analyzes a script to structure beats
 - API integration: Interfacing the frontend and backend with GPT-4o-mini completions.
 
 ## Demo
-Add your demo or pitch video link here.
+https://drive.google.com/file/d/1FCu_-dO9O7AIuBQoUL7Mft5H882ec0j5/view?usp=sharing
 
 ## Screenshots
-![Storyboard and Beats Analysis](screenshots/screenshot_storyboard.png)
-![Reference Image Map Planner](screenshots/screenshot_reference_map.png)
-![Shots Editor and Model Prompt Builder](screenshots/screenshot_shots_editor.png)
+https://drive.google.com/drive/folders/169O-I1tc04SliUHygB-E3czaF-lROplv?usp=sharing
 
 ## How to Run Locally
 
