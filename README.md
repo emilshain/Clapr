@@ -41,17 +41,20 @@ cd Clapr/frontend
 npm install && npm run dev
 ```
 
-## Deploy to Vercel
+## Deploy
 
+**[See DEPLOY.md for full instructions](./DEPLOY.md)**
+
+Quick start (Vercel):
 ```bash
 git push origin main
+# Go to vercel.com → import repo → add OPENAI_API_KEY env var → deploy
 ```
 
-1. Go to [vercel.com](https://vercel.com) and import this repo
-2. Add environment variable: `OPENAI_API_KEY` = your key
-3. Deploy
-
-Frontend and backend run on the same domain; zero additional config needed.
+3 options:
+- **Vercel only** (easiest, recommended)
+- **Vercel + Railway** (frontend + backend separate)
+- **Manual** (Render, Fly.io, or custom)
 
 ## The Pitch
 

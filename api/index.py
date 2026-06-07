@@ -1,10 +1,11 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 import sys
 import os
 
-# Add backend to path
+# Add backend to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'backend'))
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.schemas.script import ScriptParseRequest, ScriptParseResponse
