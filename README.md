@@ -1,44 +1,58 @@
 # Clapr
 
-## Overview
-Clapr is an Agentic Video Planner — a Creative AI Orchestrator that turns raw scripts into complete, production-ready shot plans, selects the optimal AI video model for each shot, and writes production-quality generation prompts ready to paste into Kling, Seedance, Van, or any other video model.
+## What Is It?
 
-## Problem Statement
-Creating AI-generated video at a professional level requires choosing the right video models, crafting specific prompts, keeping character reference IDs consistent, and managing duration budgets. Doing this manually is slow, inconsistent, and leads to wasted render credits.
+Clapr turns your script into a detailed video production plan. Paste a script → get beats, scenes, and shots with the best AI model picked for each one. Then paste the prompts into Kling, Seedance, or WAN and generate.
 
-## Solution
-Clapr separates planning from rendering. It analyzes a script to structure beats, scenes, shots, and reference maps automatically, letting you iterate on the blueprint for pennies before spending render budget on final generations.
+## Why Use Clapr Instead of Closed Platforms?
+
+| Problem | Closed Platform | Clapr |
+|---------|---|---|
+| **New model drops?** | Start over from scratch | Works with any model — paste the same plan into the new tool tomorrow |
+| **Want to test ideas?** | Pay render money every time | Re-roll the plan 100 times for pennies; only pay for approved shots |
+| **Need human actors too?** | Forces all-AI output | Same plan works for AI, humans, and designers mixed together |
+| **Characters look weird mid-video?** | System loses track during generation | Full structure locked before rendering starts; character IDs consistent everywhere |
 
 ## Features
-- **Script-to-shot breakdown**: Paste any script and receive narrative beats, scenes, and shots in one LLM call.
-- **AI model selection and prompt generation**: Pick the best video model (Kling, Seedance, Van) and generate tailored prompts per shot.
-- **Automated reference map & validation**: Auto-suggests character, prop, and location reference IDs from the script and enforces first/last frame prompts for Kling and multishots.
 
-## Tech Stack
-- Frontend: React, TypeScript, Vite
-- Backend: Python, FastAPI
-- Database: Stateless (client-side state)
-- APIs: OpenAI API (GPT-4o-mini)
-- Hosting: Vercel (Frontend), Railway (Backend)
+- Paste script → get complete shot plan in 30 seconds
+- Picks the right video model per shot (Kling for action, Seedance for style, WAN for realism)
+- Auto-generates character reference IDs that work across all shots
+- Respects each model's rules (Seedance only takes 4/5/6/8/10/12/15 seconds, etc.)
+- Export as JSON/CSV/text; works with any tool
 
-## Codex / OpenAI Usage
-- Ideation: Planning the model-agnostic orchestrator concept.
-- Architecture planning: Designing the structured JSON output schema and multi-column UI layout.
-- Code generation: Implementing the layout grids and prompt refinement inputs.
-- Debugging: Resolving Pydantic schema validation errors and React state hook synchronizations.
-- API integration: Interfacing the frontend and backend with GPT-4o-mini completions.
+## Tech
 
-## Demo
-https://drive.google.com/file/d/1FCu_-dO9O7AIuBQoUL7Mft5H882ec0j5/view?usp=sharing
+- Frontend: React + TypeScript
+- Backend: Python + FastAPI  
+- AI: OpenAI API (GPT-4o-mini)
+- Cost: Pennies for planning, dollars for rendering (not thousands)
 
-## Screenshots
-https://drive.google.com/drive/folders/169O-I1tc04SliUHygB-E3czaF-lROplv?usp=sharing
-
-## How to Run Locally
+## Start Here
 
 ```bash
 git clone https://github.com/emilshain/Clapr.git
-cd Clapr
-npm install
-npm run dev
+cd Clapr/backend
+export OPENAI_API_KEY=sk-...
+uvicorn app.main:app --port 8000
+
+# In another terminal:
+cd Clapr/frontend
+npm install && npm run dev
 ```
+
+## Deploy to Vercel
+
+```bash
+git push origin main
+```
+
+1. Go to [vercel.com](https://vercel.com) and import this repo
+2. Add environment variable: `OPENAI_API_KEY` = your key
+3. Deploy
+
+Frontend and backend run on the same domain; zero additional config needed.
+
+## The Pitch
+
+You don't need a $20K/month AI video platform. You need a $0.10 planner and a $1 renderer. Clapr is the planner. It never gets outdated because it doesn't care which renderer you use.

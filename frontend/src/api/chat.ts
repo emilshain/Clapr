@@ -56,7 +56,11 @@ export type ScriptParseResponse = {
   reference_map?: Record<string, string>;
 };
 
-const baseUrl = (import.meta.env.VITE_BACKEND_URL as string | undefined) ?? 'http://localhost:8000';
+const baseUrl = (import.meta.env.VITE_BACKEND_URL as string | undefined) ?? (
+  typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8000'
+    : ''
+);
 
 export async function sendChat(messages: ChatMessage[], systemPrompt?: string): Promise<string> {
   const response = await fetch(`${baseUrl}/api/chat`, {
