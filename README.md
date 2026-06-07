@@ -1,34 +1,48 @@
-# Clapr
+# Clapr — The AI Video Planner
 
-## What Is It?
+## The Problem
 
-Clapr turns your script into a detailed video production plan. Paste a script → get beats, scenes, and shots with the best AI model picked for each one. Then paste the prompts into Kling, Seedance, or WAN and generate.
+You have a script. You paste it into Kling or Sora. One minute later, you have a video. But it looks like garbage.
 
-## Why Use Clapr Instead of Closed Platforms?
+Why? Because you just let the AI guess. You didn't tell it:
+- Which shots need action vs. style vs. realism
+- Which model is actually best for each moment
+- What your character should look like in shot 3, 7, and 12
+- How long each shot can be (Seedance only takes 4/5/6/8/10/12/15 seconds — not 7)
 
-| Problem | Closed Platform | Clapr |
-|---------|---|---|
-| **New model drops?** | Start over from scratch | Works with any model — paste the same plan into the new tool tomorrow |
-| **Want to test ideas?** | Pay render money every time | Re-roll the plan 100 times for pennies; only pay for approved shots |
-| **Need human actors too?** | Forces all-AI output | Same plan works for AI, humans, and designers mixed together |
-| **Characters look weird mid-video?** | System loses track during generation | Full structure locked before rendering starts; character IDs consistent everywhere |
+So you spend $100 in render credits finding out the hard way.
 
-## Features
+## The Solution
 
-- Paste script → get complete shot plan in 30 seconds
-- Picks the right video model per shot (Kling for action, Seedance for style, WAN for realism)
-- Auto-generates character reference IDs that work across all shots
-- Respects each model's rules (Seedance only takes 4/5/6/8/10/12/15 seconds, etc.)
-- Export as JSON/CSV/text; works with any tool
+Clapr is your director before rendering starts.
 
-## Tech
+**You paste the script. Clapr gives you:**
+- Every shot broken down
+- The best AI model picked for each one (Kling for action, Seedance for mood, WAN for realism)
+- Perfect prompts ready to paste into any tool
+- Character IDs that stay the same across every shot
+- Respect for each model's weird rules
 
-- Frontend: React + TypeScript
-- Backend: Python + FastAPI  
-- AI: OpenAI API (GPT-4o-mini)
-- Cost: Pennies for planning, dollars for rendering (not thousands)
+**Now you have a plan.** You test it once. You tweak it. You run it 100 times for $1. Only when it's perfect do you spend render money.
 
-## Start Here
+## Why People Buy It
+
+| You Want | Expensive Platform | Clapr |
+|---|---|---|
+| **New model drops** | Locked in. Start over. | Works with any model. Tomorrow. |
+| **Test lots of ideas** | $100 per test | $0.01 per test |
+| **Human actors + AI** | Breaks. All-AI only. | Use both. Same plan. |
+| **Consistent characters** | Characters morph. | IDs locked before rendering. |
+
+## How It Works
+
+1. Paste your script
+2. Get beats, scenes, shots, and reference IDs in 30 seconds
+3. Review and tweak (optional)
+4. Copy any prompt, paste into Kling/Seedance/WAN
+5. Generate
+
+## Get Started
 
 ```bash
 git clone https://github.com/emilshain/Clapr.git
@@ -36,26 +50,53 @@ cd Clapr/backend
 export OPENAI_API_KEY=sk-...
 uvicorn app.main:app --port 8000
 
-# In another terminal:
+# New terminal:
 cd Clapr/frontend
 npm install && npm run dev
 ```
 
-## Deploy
+Visit `http://localhost:5173`
 
-**[See DEPLOY.md for full instructions](./DEPLOY.md)**
+## Demo Script
 
-Quick start (Vercel):
-```bash
-git push origin main
-# Go to vercel.com → import repo → add OPENAI_API_KEY env var → deploy
-```
+Show these four wins:
 
-3 options:
-- **Vercel only** (easiest, recommended)
-- **Vercel + Railway** (frontend + backend separate)
-- **Manual** (Render, Fly.io, or custom)
+**1. Model Obsolescence Immunity** (30 sec)
+- Paste a script
+- Get a shot plan with Kling, Seedance, and WAN prompts
+- "Tomorrow, a better model drops. Just copy these prompts in. Same plan works."
+- Show export → paste into different tool
 
-## The Pitch
+**2. Cost Before Committing** (45 sec)
+- Show the Setup form with a script
+- Hit Continue → show the LLM generating a full plan in 10 seconds
+- "That cost 1 cent. You can do that 100 times for a dollar."
+- Show beat/scene/shot edits (tweaking the plan)
+- "Only when you approve the plan do you spend money on renders."
 
-You don't need a $20K/month AI video platform. You need a $0.10 planner and a $1 renderer. Clapr is the planner. It never gets outdated because it doesn't care which renderer you use.
+**3. Hybrid Flexibility** (30 sec)
+- Show the shot list with mixed models
+- "Shot 1–3 go to Kling (our AI). Shot 4 goes to a human actor on set. Shot 5 is motion graphics."
+- "One plan. AI, humans, designers. All from the same brief."
+
+**4. Structural Continuity** (45 sec)
+- Show the Reference Map page with character IDs (@lead_ref_01, etc.)
+- "Every shot uses the same reference. Character never morphs. You locked it before rendering."
+- Show a shot prompt that uses @lead_ref_01
+- Show another shot using the same @lead_ref_01
+- "Same character, every time. Structure locked before the first pixel is born."
+
+**Close (30 sec)**
+- Show the export panel (JSON/CSV)
+- One-liner: "You don't need a $20K/month platform. You need a $0.10 planner and a $1 renderer. We're the planner. We never get outdated."
+
+## The Math
+
+- **Closed platform:** $200/mo subscription + $50/video in render costs
+- **Clapr:** Free to host + $0.10 planning cost + $1 rendering cost (any tool)
+
+**= You save $200/mo and move faster**
+
+---
+
+**You don't need a $20K/month supercomputer. You need a 10¢ planner and a $1 renderer. We're the planner. We never get outdated because we don't care which renderer you use.**

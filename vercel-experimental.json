@@ -1,0 +1,26 @@
+{
+  "experimentalServices": {
+    "frontend": {
+      "root": "frontend",
+      "rootDirectory": "frontend",
+      "build": {
+        "command": "npm run build"
+      },
+      "output": {
+        "directory": "dist"
+      },
+      "framework": "vite"
+    },
+    "backend": {
+      "root": "backend",
+      "build": {
+        "command": "pip install -r requirements.txt"
+      },
+      "runtime": "python3.11",
+      "env": {
+        "OPENAI_API_KEY": "@openai_api_key",
+        "OPENAI_MODEL": "gpt-4o-mini"
+      }
+    }
+  }
+}

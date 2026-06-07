@@ -1,11 +1,10 @@
 {
-  "buildCommand": "npm run build --prefix frontend && pip install -r backend/requirements.txt",
+  "buildCommand": "npm run build --prefix frontend",
   "outputDirectory": "frontend/dist",
   "framework": "vite",
   "env": {
     "OPENAI_API_KEY": "@openai_api_key",
-    "OPENAI_MODEL": "gpt-4o-mini",
-    "PYTHONPATH": "backend"
+    "OPENAI_MODEL": "gpt-4o-mini"
   },
   "functions": {
     "api/index.py": {
@@ -19,5 +18,6 @@
       "source": "/api/:path*",
       "destination": "/api/index.py"
     }
-  ]
+  ],
+  "ignore": ["backend/**"]
 }
